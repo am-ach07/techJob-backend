@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <title>My Orders - Marketplace</title>
+    <style>
+        :root { --primary: #1877f2; --bg: #f0f2f5; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; }
+        .sidebar { width: 260px; background: white; height: 100vh; border-right: 1px solid #ddd; }
+        .sidebar a { padding: 12px 25px; text-decoration: none; color: #606770; display: block; font-weight: 600; }
+        .sidebar a.active { background: #e7f3ff; color: var(--primary); }
+
+        .main-content { flex: 1; padding: 40px; }
+        .orders-container { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { background: #f8f9fa; padding: 15px; border-bottom: 2px solid #eee; color: #65676b; }
+        td { padding: 20px 15px; border-bottom: 1px solid #eee; }
+        
+        .status { padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; }
+        .status.completed { background: #e7fadb; color: #28a745; }
+        .status.pending { background: #fff4e5; color: #ff9800; }
+        
+        .btn-view { background: #f0f2f5; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+        .btn-view:hover { background: #e4e6eb; }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <h2 style="text-align: center; color: var(--primary);">Marketplace</h2>
+        <a href="/">🏠 Home</a>
+        <a href="/profile">👤 Profile</a>
+        <a href="/offers">🏷️ Offers</a>
+        <a href="/orders" class="active">📦 Orders</a>
+        <a href="/notification">🔔 Notifications</a>
+        <a href="/settings">⚙️ Settings</a>
+    </nav>
+
+    <main class="main-content">
+        <h1>Order Management</h1>
+        <div class="orders-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Order Number</th>
+                        <th>Service / Offer</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="order: ${order}">
+                        <td th:text="${order.publicID}"></td>
+                        <td><strong><a th:href="@{/offers/{id}(id=${order.service.publicID})}" th:text="${order.service.title}"></a></strong></td>
+                        <td class="order-time" th:data-time="${order.createdAt}" th:text="${#temporals.format(order.createdAt,
+												                             'dd MMM yyyy HH:mm',
+												                             T(java.util.Locale).ENGLISH)}"></td>
+                        <td><span class="status completed" th:text="${order.status}"></span></td>
+                        <td><button class="btn-view">Details</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+	<script>
+		//for date 
+				function formatTimeAgo(dateString) {
+
+					const now = new Date();
+					const date = new Date(dateString);
+					const diffMs = now - date;
+
+					const minutes = Math.floor(diffMs / 60000);
+					const hours = Math.floor(diffMs / 3600000);
+					const days = Math.floor(diffMs / 86400000);
+
+					if (minutes < 60) {
+						return minutes <= 1 ? "Just now" : `${minutes} minutes ago`;
+					}
+
+					if (hours < 24) {
+						return `${hours} hours ago`;
+					}
+
+					if (days < 7) {
+						return `${days} days ago`;
+					}
+
+					// تاريخ بعيد → تاريخ ثابت
+					return date.toLocaleDateString("en-GB", {
+						day: "2-digit",
+						month: "short",
+						year: "numeric"
+					});
+				}
+
+				document.querySelectorAll(".order-time").forEach(el => {
+					const date = el.dataset.time;
+					if (date) {
+						el.innerText = formatTimeAgo(date);
+					}
+				});
+	</script>
+</body>
+</html>

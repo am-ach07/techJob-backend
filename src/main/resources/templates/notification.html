@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+	<meta charset="UTF-8">
+	<title>Notifications - Marketplace</title>
+
+	<style>
+		:root {
+			--primary: #1877f2;
+			--bg: #f0f2f5;
+		}
+
+		body {
+			font-family: 'Segoe UI', sans-serif;
+			background: var(--bg);
+			margin: 0;
+			display: flex;
+		}
+
+		.sidebar {
+			width: 260px;
+			background: white;
+			height: 100vh;
+			border-right: 1px solid #ddd;
+		}
+
+		.sidebar a {
+			padding: 12px 25px;
+			text-decoration: none;
+			color: #606770;
+			display: block;
+			font-weight: 600;
+		}
+
+		.sidebar a.active {
+			background: #e7f3ff;
+			color: var(--primary);
+		}
+
+		.main-content {
+			flex: 1;
+			padding: 40px;
+			display: flex;
+			justify-content: center;
+		}
+
+		.notif-wrapper {
+			width: 100%;
+			max-width: 700px;
+			background: white;
+			border-radius: 12px;
+			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+			padding: 20px;
+		}
+
+		.notif-header {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 20px;
+		}
+
+		.notif-item {
+			display: flex;
+			align-items: center;
+			padding: 15px;
+			border-radius: 8px;
+			transition: 0.2s;
+			cursor: pointer;
+			margin-bottom: 6px;
+			position: relative;
+		}
+
+		.notif-item:hover {
+			background: #f0f2f5;
+		}
+
+		.notif-item.unread {
+			background: #f0f7ff;
+		}
+
+		.notif-item.unread::after {
+			content: '';
+			width: 10px;
+			height: 10px;
+			background: var(--primary);
+			border-radius: 50%;
+			position: absolute;
+			left: 12px;
+			top:20px;
+		}
+
+		.notif-icon {
+			width: 45px;
+			height: 45px;
+			background: #e7f3ff;
+			border-radius: 50%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 1.2rem;
+			margin-right: 15px;
+		}
+
+		.notif-text {
+			flex: 1;
+		}
+
+		.notif-time {
+			font-size: 0.8rem;
+			color: #65676b;
+			margin-top: 4px;
+		}
+
+		.delete-btn {
+			background: none;
+			border: none;
+			color: #999;
+			cursor: pointer;
+			font-size: 0.9rem;
+		}
+
+		.delete-btn:hover {
+			color: red;
+		}
+	</style>
+</head>
+
+<body>
+
+	<nav class="sidebar">
+		<h2 style="text-align:center; color:var(--primary);">Marketplace</h2>
+		<a href="/">🏠 Home</a>
+		<a href="/profile">👤 Profile</a>
+		<a href="/offers">🏷️ Offers</a>
+		<a href="/orders">📦 Orders</a>
+		<a href="/notification" class="active">🔔 Notifications</a>
+		<a href="/settings">⚙️ Settings</a>
+	</nav>
+
+	<main class="main-content">
+		<div class="notif-wrapper">
+
+			<div class="notif-header">
+				<h2>Notifications</h2>
+
+				<!-- MARK ALL AS READ -->
+				<form th:action="@{/notification/read}" method="post">
+					<input type="hidden" name="_csrf" th:value="${csrfToken}" />
+					<button type="submit"
+						style="background:none;border:none;color:var(--primary);font-weight:600;cursor:pointer">
+						Mark all as read
+					</button>
+				</form>
+			</div>
+
+			<!-- LIST -->
+			<div th:if="${notification != null}">
+				<div th:each="notif : ${notification}">
+
+					<!-- ITEM -->
+					<div class="notif-item" th:classappend="${!notif.read} ? ' unread' : ''" th:data-id="${notif.id}"
+						th:data-title="${notif.title}" th:data-message="${notif.message}" onclick="openNotif(this)">
+
+						<div class="notif-icon">🔔</div>
+
+						<div class="notif-text">
+							<div th:text="${notif.title}"></div>
+							<div class="notif-time" th:data-time="${notif.createdAt}" th:text="${#temporals.format(notif.createdAt,
+						                             'dd MMM yyyy HH:mm',
+						                             T(java.util.Locale).ENGLISH)}">
+							</div>
+						</div>
+
+						<!-- DELETE -->
+						<form th:action="@{/notification/delete/{id}(id=${notif.id})}" method="post"
+							onclick="event.stopPropagation()">
+
+							<input type="hidden" name="_csrf" th:value="${csrfToken}" />
+							<button type="submit" class="delete-btn">Delete</button>
+						</form>
+					</div>
+
+					<!-- READ FORM (HIDDEN) -->
+					<form th:action="@{/notification/read/{id}(id=${notif.id})}" method="post" target="hiddenFrame"
+						class="read-form">
+						<input type="hidden" name="_csrf" th:value="${csrfToken}" />
+					</form>
+					<iframe name="hiddenFrame" style="display:none;"></iframe>
+				</div>
+			</div>
+
+			<div th:if="${notification == null}">
+				<strong>You don’t have notifications.</strong>
+			</div>
+		</div>
+	</main>
+
+	<!-- MODAL -->
+	<div id="notifModal" style="display:none; position:fixed; inset:0;
+            background:rgba(0,0,0,0.4);
+            z-index:1000;
+            justify-content:center;
+            align-items:center;">
+
+		<div style="background:#fff;
+                width:100%;
+                max-width:400px;
+                border-radius:12px;
+                padding:20px">
+
+			<h3 id="modalTitle"></h3>
+			<p id="modalMessage" style="margin:15px 0; color:#444;"></p>
+
+			<div style="text-align:right">
+				<button onclick="closeModal()" style="background:#eee;border:none;padding:6px 14px;border-radius:6px">
+					Close
+				</button>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		function openNotif(el) {
+
+		    // الحصول على الفورم الصحيح (الموجود بعد notif-item مباشرة)
+		    const readForm = el.nextElementSibling;
+
+		    if (readForm && readForm.classList.contains("read-form")) {
+		        readForm.submit(); // POST بدون Reload
+		    } else {
+		        console.error("Read form not found for notification");
+		    }
+
+		    // UI
+		    el.classList.remove("unread");
+
+		    document.getElementById("modalTitle").innerText = el.dataset.title || "";
+		    document.getElementById("modalMessage").innerText = el.dataset.message || "";
+
+		    document.getElementById("notifModal").style.display = "flex";
+		}
+
+
+		function closeModal() {
+			document.getElementById("notifModal").style.display = "none";
+		}
+		//for date 
+		function formatTimeAgo(dateString) {
+
+			const now = new Date();
+			const date = new Date(dateString);
+			const diffMs = now - date;
+
+			const minutes = Math.floor(diffMs / 60000);
+			const hours = Math.floor(diffMs / 3600000);
+			const days = Math.floor(diffMs / 86400000);
+
+			if (minutes < 60) {
+				return minutes <= 1 ? "Just now" : `${minutes} minutes ago`;
+			}
+
+			if (hours < 24) {
+				return `${hours} hours ago`;
+			}
+
+			if (days < 7) {
+				return `${days} days ago`;
+			}
+
+			// تاريخ بعيد → تاريخ ثابت
+			return date.toLocaleDateString("en-GB", {
+				day: "2-digit",
+				month: "short",
+				year: "numeric"
+			});
+		}
+
+		document.querySelectorAll(".notif-time").forEach(el => {
+			const date = el.dataset.time;
+			if (date) {
+				el.innerText = formatTimeAgo(date);
+			}
+		});
+
+	</script>
+
+</body>
+
+</html>

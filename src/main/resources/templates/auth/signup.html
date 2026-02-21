@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Create Account- Marketplace</title>
+	<style>
+		body {
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+			background-color: #f4f6f9;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			min-height: 100vh;
+			margin: 0;
+			direction: ltr;
+		}
+
+		.container {
+			background: white;
+			padding: 2rem;
+			border-radius: 10px;
+			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+			width: 100%;
+			max-width: 400px;
+			margin: 20px;
+		}
+
+		h2 {
+			text-align: center;
+			color: #333;
+			margin-bottom: 1.5rem;
+		}
+
+		form {
+			display: flex;
+			flex-direction: column;
+		}
+
+		label {
+			margin-bottom: 0.5rem;
+			font-weight: 600;
+			color: #555;
+		}
+
+		input[type="text"],
+		input[type="email"],
+		input[type="password"],
+		select {
+			padding: 10px;
+			margin-bottom: 5px;
+			border: 1px solid #ddd;
+			border-radius: 5px;
+			font-size: 1rem;
+		}
+
+		/* تصميم رسائل الخطأ */
+		.error-msg {
+			color: #dc3545;
+			font-size: 0.85rem;
+			margin-bottom: 10px;
+			display: block;
+		}
+
+		.global-error {
+			background-color: #f8d7da;
+			color: #721c24;
+			padding: 10px;
+			border-radius: 5px;
+			margin-bottom: 15px;
+			border: 1px solid #f5c6cb;
+			text-align: center;
+		}
+
+		.radio-group {
+			margin-bottom: 1rem;
+			display: flex;
+			gap: 15px;
+			align-items: center;
+		}
+
+		button {
+			background-color: #007bff;
+			color: white;
+			padding: 12px;
+			border: none;
+			border-radius: 5px;
+			cursor: pointer;
+			font-size: 1rem;
+			transition: background 0.3s;
+			margin-top: 10px;
+		}
+
+		button:hover {
+			background-color: #0056b3;
+		}
+
+		.link {
+			text-align: center;
+			margin-top: 1rem;
+			font-size: 0.9rem;
+		}
+
+		a {
+			color: #007bff;
+			text-decoration: none;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="container">
+		<h2>Create new Account</h2>
+
+		<div th:if="${error}" class="global-error" th:text="${error}"></div>
+
+		<form id="signupForm" th:action="@{/signup}" th:object="${registerRequest}" method="post">
+			<input type="hidden" name="_csrf" th:value="${csrfToken}" />
+			<label>Username</label>
+			<input type="text" th:field="*{username}" placeholder="enter your username">
+			<span class="error-msg" th:errors="*{username}"></span>
+			<span class="error-msg" th:text="${errorUser}"></span>
+
+			<label>Email </label>
+			<input type="email" th:field="*{email}" placeholder="example@mail.com">
+			<span class="error-msg" th:errors="*{email}"></span>
+			<span class="error-msg" th:text="${errorEmail}"></span>
+			<label> Password</label>
+			<input type="password" th:field="*{password}" id="password" placeholder="******">
+			<span class="error-msg" th:errors="*{password}"></span>
+
+			<label>Gender</label>
+			<div class="radio-group">
+				<input type="radio" th:field="*{gender}" id="male" value="MALE"> <label for="male">Male</label>
+				<input type="radio" th:field="*{gender}" id="female" value="FEMALE"> <label for="female">Female</label>
+			</div>
+			<span class="error-msg" th:errors="*{gender}"></span>
+			
+			<div class="radio-group">
+				<label for="user"> Normal User</label>
+				<input type="radio" th:field="*{role}" id="user" value="USER" onclick="toggleSkills(false)">
+				<label for="artisan"> Artisan</label>
+				<input type="radio" th:field="*{role}" id="artisan" value="ARTISAN" onclick="toggleSkills(true)">
+			</div>
+			<span class="error-msg" th:errors="*{role}"></span>
+			<div id="skillsContainer">
+				<label>Skills</label>
+				<select th:field="*{skills}">
+					<option value="">Choose one </option>
+					<option value="DESIGN">Design</option>
+					<option value="DEVELOPMENT">Developement</option>
+					<option value="MARKETING">Marketing</option>
+				</select>
+				<span class="error-msg" th:errors="*{skills}"></span>
+			<div>
+					<label for="description">Description</label>
+					<input id="description" type="text" th:field="*{description}" placeholder="Enter a Description">
+					<span class="error-msg" th:errors="*{description}"></span>
+				</div>
+			</div>
+
+			<button type="submit"> Get Start</button>
+			<div class="link">Have An Acount?<a th:href="@{/login}"> Sign In</a></div>
+		</form>
+	</div>
+
+	<script th:inline="javascript">
+		function toggleSkills(isArtisan) {
+			const skillsDiv = document.getElementById('skillsContainer');
+			skillsDiv.style.display = isArtisan ? 'block' : 'none';
+		}
+		window.onload=toggleSkills(false);
+		
+	</script>
+</body>
+
+</html>

@@ -1,0 +1,20 @@
+package com.domain.enums;
+
+public enum Nationality {
+
+	
+	ALGERIAN,
+	TUNISIAN,
+	MOROCCAN,
+	EGYPTIAN,
+	LEBANESE,
+	SYRIAN,
+	JORDANIAN,
+	PALESTINIAN,
+	SAUDI_ARABIAN,
+	EMIRATI,
+	QATARI,
+	KUWAITI,
+	OMANI,
+	YEMENI
+}
