@@ -7,8 +7,8 @@ services:
     container_name: marketplace_mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PSWD}
-      MYSQL_DATABASE: marketplace
+      MYSQL_ROOT_PASSWORD: ${MYSQLPASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
     ports:
       - "3306:3306"
     volumes:
@@ -34,9 +34,9 @@ services:
       DB_PSWD: ${DB_PSWD}
       EMAIL: ${EMAIL}
       EMAIL_SENDER: ${EMAIL_SENDER}
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/marketplace
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: ${DB_PSWD}
+      SPRING_DATASOURCE_URL: ${MYSQL_URL}
+      SPRING_DATASOURCE_USERNAME: ${MYSQLUSER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQLPASSWORD}
 
 volumes:
   mysql_data:
