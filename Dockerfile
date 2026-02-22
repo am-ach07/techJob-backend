@@ -19,5 +19,5 @@ COPY --from=build /app/target/*.jar app.jar
 # فتح البورت
 EXPOSE 7777
 
-# تشغيل التطبيق
+#  ت jjتشغيل التطبيق
 ENTRYPOINT ["java", "-jar", "app.jar", "--spring.profiles.active=dev"]
