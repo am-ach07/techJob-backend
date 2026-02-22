@@ -14,24 +14,29 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
 
-	  redis:
-	      image: redis:7
-	      restart: always
-	      ports:
-	        - "6379:6379"
+  redis:
+    image: redis:7
+    container_name: marketplace_redis
+    restart: always
+    ports:
+      - "6379:6379"
 
-	    app:
-	      build: .
-	      depends_on:
-	        - mysql
-	        - redis
-	      ports:
-	        - "8080:8080"
-	      environment:
-	        JWT_SECRET: ${JWT_SECRET}
-	        SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/techjob
-	        SPRING_DATASOURCE_USERNAME: root
-	        SPRING_DATASOURCE_PASSWORD: root
+  app:
+    build: .
+    container_name: marketplace_app
+    depends_on:
+      - mysql
+      - redis
+    ports:
+      - "7777:7777"
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      DB_PSWD: ${DB_PSWD}
+      EMAIL: ${EMAIL}
+      EMAIL_SENDER: ${EMAIL_SENDER}
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/marketplace
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${DB_PSWD}
 
-	  volumes:
-	    mysql_data:
+volumes:
+  mysql_data:
