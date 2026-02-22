@@ -1,5 +1,5 @@
 # مرحلة البناء (Build)
-FROM maven:3.9.4-openjdk-21 AS build
+FROM eclipse-temurin:21-jdk AS build
 WORKDIR /app
 
 # نسخ pom + ملفات المشروع
@@ -10,7 +10,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # مرحلة التشغيل (Run)
-FROM openjdk:21-jdk
+FROM eclipse-temurin:21-jdk
 WORKDIR /app
 
 # نسخ الـ JAR من مرحلة البناء
