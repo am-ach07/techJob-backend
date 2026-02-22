@@ -12,35 +12,35 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@Configuration
-public class RedisBucketConfig {
-
-    @Value("${spring.redis.host}")
-    private String redisHost;
-
-    @Value("${spring.redis.port}")
-    private int redisPort;
-
-    @Bean
-    public RedisClient redisClient() {
-        String redisUrl = "redis://" + redisHost + ":" + redisPort;
-        return RedisClient.create(redisUrl);
-    }
-
-    @Bean
-    public StatefulRedisConnection<String, byte[]> redisConnection(RedisClient redisClient) {
-
-        RedisCodec<String, byte[]> codec =
-                RedisCodec.of(new StringCodec(), new ByteArrayCodec());
-
-        return redisClient.connect(codec);
-    }
-
-    @Bean
-    public ProxyManager<String> proxyManager(
-            StatefulRedisConnection<String, byte[]> connection) {
-
-        return LettuceBasedProxyManager.builderFor(connection)
-                .build();
-    }
-}
+//@Configuration
+//public class RedisBucketConfig {
+//
+//    @Value("${spring.redis.host}")
+//    private String redisHost;
+//
+//    @Value("${spring.redis.port}")
+//    private int redisPort;
+//
+//    @Bean
+//    public RedisClient redisClient() {
+//        String redisUrl = "redis://" + redisHost + ":" + redisPort;
+//        return RedisClient.create(redisUrl);
+//    }
+//
+//    @Bean
+//    public StatefulRedisConnection<String, byte[]> redisConnection(RedisClient redisClient) {
+//
+//        RedisCodec<String, byte[]> codec =
+//                RedisCodec.of(new StringCodec(), new ByteArrayCodec());
+//
+//        return redisClient.connect(codec);
+//    }
+//
+//    @Bean
+//    public ProxyManager<String> proxyManager(
+//            StatefulRedisConnection<String, byte[]> connection) {
+//
+//        return LettuceBasedProxyManager.builderFor(connection)
+//                .build();
+//    }
+//}
