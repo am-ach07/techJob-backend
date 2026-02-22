@@ -14,19 +14,19 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
 
-  redis:
-    image: redis:7
-    container_name: marketplace_redis
-    restart: always
-    ports:
-      - "6379:6379"
+  #redis:
+#    image: redis:7
+#    container_name: marketplace_redis
+#    restart: always
+#    ports:
+#      - "6379:6379"
 
   app:
     build: .
     container_name: marketplace_app
     depends_on:
       - mysql
-      - redis
+#      - redis
     ports:
       - "7777:7777"
     environment:
