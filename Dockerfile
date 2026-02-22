@@ -1,21 +1,21 @@
-# 1️⃣ مرحلة البناء (Build) باستخدام صورة Maven
-FROM maven:3.9.4-eclipse-temurin-21 AS builder
+# 🛠 Build stage ― استخدم صورة Maven تدعم JDK 21
+FROM maven:3.8.8-eclipse-temurin-21-alpine AS build
 WORKDIR /app
 
+# نسخ ملفات البناء
 COPY pom.xml .
 COPY src ./src
 
-# هذا يبني JAR
+# بناء الملف JAR
 RUN mvn clean package -DskipTests
 
-# 2️⃣ مرحلة التشغيل
-FROM eclipse-temurin:21-jdk
-
+# 🚀 Run stage ― استخدم Eclipse Temurin JRE 21
+FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 
-# نسخه من مرحلة builder
-COPY --from=builder /app/target/*.jar app.jar
+# نسخ JAR من مرحلة البناء
+COPY --from=build /app/target/*.jar app.jar
 
 EXPOSE 7777
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar", "--spring.profiles.active=dev"]
