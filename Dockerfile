@@ -1,23 +1,21 @@
-# مرحلة البناء (Build)
-FROM eclipse-temurin:21-jdk AS build
+# 1️⃣ مرحلة البناء (Build) باستخدام صورة Maven
+FROM maven:3.9.4-openjdk-21 AS builder
 WORKDIR /app
 
-# نسخ pom + ملفات المشروع
 COPY pom.xml .
 COPY src ./src
 
-# بناء المشروع وتجاهل الاختبارات
+# هذا يبني JAR
 RUN mvn clean package -DskipTests
 
-# مرحلة التشغيل (Run)
+# 2️⃣ مرحلة التشغيل
 FROM eclipse-temurin:21-jdk
+
 WORKDIR /app
 
-# نسخ الـ JAR من مرحلة البناء
-COPY --from=build /app/target/*.jar app.jar
+# نسخه من مرحلة builder
+COPY --from=builder /app/target/*.jar app.jar
 
-# فتح البورت
 EXPOSE 7777
 
-#  ت jjتشغيل التطبيق
 ENTRYPOINT ["java", "-jar", "app.jar", "--spring.profiles.active=dev"]
