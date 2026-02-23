@@ -7,8 +7,7 @@ services:
 	  container_name: marketplace_mysql
 	  restart: always
 	  environment:
-	    - MYSQL_ROOT_PASSWORD=${DB_PSWD}
-	    - MYSQL_DATABASE=marketplace
+	    - MYSQL_DATABASE=railway
 	    - MYSQL_USER=${MYSQLUSER}
 	    - MYSQL_PASSWORD=${MYSQLPASSWORD}
 	  ports:
@@ -33,7 +32,6 @@ services:
       - "7777:7777"
     environment:
       JWT_SECRET: ${JWT_SECRET}
-      DB_PSWD: ${DB_PSWD}
       EMAIL: ${EMAIL}
       EMAIL_SENDER: ${EMAIL_SENDER}
       SPRING_DATASOURCE_URL: ${MYSQL_URL}
