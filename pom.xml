@@ -14,11 +14,11 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.CRUDS</groupId>
-    <artifactId>CRUDS</artifactId>
+    <groupId>com.techJob</groupId>
+    <artifactId>techJob</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>CRUDS</name>
-    <description>CRUDS Spring Boot Application</description>
+    <name>techJob</name>
+    <description>techJob Spring Boot Application</description>
 
     <!-- Properties -->
     <properties>
