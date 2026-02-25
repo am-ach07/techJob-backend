@@ -208,7 +208,7 @@ public class ImageService {
     
     
 
-	//get profile image
+	//================================get profile image==============================================
 	public String getProfileImageUrl() {
 	    User user = getCurrentUser();
 	    if(user.getProfilImageUrl()!=null) 
@@ -218,7 +218,7 @@ public class ImageService {
 	}
 
 	
-	//upload profile image
+	//==================================upload profile image============================================================
 	@Transactional
 	public String uploadProfileImage(MultipartFile file) {
 
@@ -243,7 +243,7 @@ public class ImageService {
 
 
 	
-	//delete image
+	//=======================================delete image============================================
 	public void deleteProfileImage() {
 
 	    User user = getCurrentUser();
