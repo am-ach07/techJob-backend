@@ -130,6 +130,7 @@ public class AuthenticationService {
 
         userRepository.save(user);
 
+        try {
         EmailVerificationToken token =
                 emailVerificationService.createOrUpdateToken(user);
 
@@ -140,6 +141,9 @@ public class AuthenticationService {
                 "Welcome!",
                 "Thank you for joining " + user.getUsername()
         );
+        } catch (EmailSendingException ex) {
+			logger.error("Failed to send verification email to {}: {}", user.getEmail(), ex.getMessage());
+        }
 }
 	 	// ============================
 	    // RESEND EMAIL VERIFICATION
