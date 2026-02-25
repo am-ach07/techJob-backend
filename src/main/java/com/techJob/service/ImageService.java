@@ -223,21 +223,22 @@ public class ImageService {
 	public String uploadProfileImage(MultipartFile file) {
 
 	    User user = getCurrentUser();
-
 	    validateImage(file);
 
+	    String oldImage = user.getProfilImageUrl();
+
+	    // 1️⃣ حفظ الصورة الجديدة
 	    String newUrl = fileStorageService.saveFile(file, "profiles");
 
-	    String image=user.getProfilImageUrl();
-	    if (image != null) { 
-
-	        fileStorageService.deleteFile(image);
-	    }
+	    // 2️⃣ تحديث قاعدة البيانات
 	    user.setProfilImageUrl(newUrl);
-
-	    
-	    
 	    userRepository.save(user);
+
+	    // 3️⃣ حذف الصورة القديمة بعد نجاح كل شيء
+	    if (oldImage != null) {
+	        fileStorageService.deleteFile(oldImage);
+	    }
+
 	    return newUrl;
 	}
 

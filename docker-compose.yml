@@ -27,6 +27,8 @@ services:
       PSWD: ${PSWD}
     depends_on:
       - mysql
+    volumes:
+      - ./uploads:/app/uploads
 
 volumes:
   mysql-data:
