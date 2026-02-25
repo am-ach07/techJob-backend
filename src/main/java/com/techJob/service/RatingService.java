@@ -1,4 +1,4 @@
-package com.techJobservice;
+package com.techJob.service;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

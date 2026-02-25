@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.techJob.security.constants.SecurityConstants;
-import com.techJobservice.AuthAuditLogService;
+import com.techJob.service.AuthAuditLogService;
 
 //import io.github.bucket4j.Bucket;
 //import io.github.bucket4j.distributed.BucketProxy;

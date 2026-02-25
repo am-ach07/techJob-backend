@@ -17,7 +17,7 @@ import com.techJob.DTOs.user.EmailRequest;
 import com.techJob.response.ApiResponse;
 import com.techJob.response.ApiResponseFactory;
 import com.techJob.response.JWTResponseDTO;
-import com.techJobservice.AuthenticationService;
+import com.techJob.service.AuthenticationService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;

@@ -1,4 +1,4 @@
-package com.techJobservice;
+package com.techJob.service;
 
 import java.math.BigDecimal;
 import java.time.Duration;

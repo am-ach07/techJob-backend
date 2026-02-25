@@ -6,7 +6,7 @@ import com.techJob.exception.auth.EmailAlreadyExistsException;
 import com.techJob.exception.auth.UsernameAlreadyExistsException;
 import com.techJob.response.JWTResponseDTO;
 import com.techJob.security.jwt.CookieService;
-import com.techJobservice.AuthenticationService;
+import com.techJob.service.AuthenticationService;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;

@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.techJob.response.ApiResponse;
 import com.techJob.response.ApiResponseFactory;
-import com.techJobservice.PaymentService;
+import com.techJob.service.PaymentService;
 
 @Controller
 @RequestMapping("/api/v1/payment")

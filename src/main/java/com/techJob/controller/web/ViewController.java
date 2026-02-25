@@ -14,9 +14,9 @@ import com.techJob.DTOs.UpdateProfileRequest;
 import com.techJob.DTOs.notifications.NotificationsDTO;
 import com.techJob.response.ProfileResponse;
 import com.techJob.security.jwt.CookieService;
-import com.techJobservice.NotificationsServiceImp;
-import com.techJobservice.OrderService;
-import com.techJobservice.UserSettingService;
+import com.techJob.service.NotificationsServiceImp;
+import com.techJob.service.OrderService;
+import com.techJob.service.UserSettingService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

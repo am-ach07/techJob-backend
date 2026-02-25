@@ -22,8 +22,8 @@ import com.techJob.DTOs.user.UpdateUsernameRequest;
 import com.techJob.response.ApiResponse;
 import com.techJob.response.ApiResponseFactory;
 import com.techJob.response.ProfileResponse;
-import com.techJobservice.ImageService;
-import com.techJobservice.UserSettingService;
+import com.techJob.service.ImageService;
+import com.techJob.service.UserSettingService;
 
 import jakarta.validation.Valid;
 

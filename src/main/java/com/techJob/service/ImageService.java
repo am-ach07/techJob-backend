@@ -1,4 +1,4 @@
-package com.techJobservice;
+package com.techJob.service;
 
 import java.util.List;
 import java.util.UUID;

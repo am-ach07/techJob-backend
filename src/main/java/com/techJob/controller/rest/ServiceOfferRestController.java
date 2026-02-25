@@ -34,8 +34,8 @@ import com.techJob.domain.enums.OffersStatus;
 import com.techJob.mapper.ReaderJson;
 import com.techJob.response.ApiResponse;
 import com.techJob.response.ApiResponseFactory;
-import com.techJobservice.ImageService;
-import com.techJobservice.SreviceOfferService;
+import com.techJob.service.ImageService;
+import com.techJob.service.SreviceOfferService;
 
 import jakarta.validation.Valid;
 

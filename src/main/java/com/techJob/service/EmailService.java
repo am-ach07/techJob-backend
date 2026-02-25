@@ -1,4 +1,4 @@
-package com.techJobservice;
+package com.techJob.service;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;

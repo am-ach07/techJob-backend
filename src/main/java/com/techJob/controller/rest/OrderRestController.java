@@ -23,8 +23,8 @@ import com.techJob.DTOs.rating.RatingDTO;
 import com.techJob.domain.enums.OrdersStatus;
 import com.techJob.response.ApiResponse;
 import com.techJob.response.ApiResponseFactory;
-import com.techJobservice.OrderService;
-import com.techJobservice.RatingService;
+import com.techJob.service.OrderService;
+import com.techJob.service.RatingService;
 
 import jakarta.validation.Valid;
 

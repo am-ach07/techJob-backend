@@ -1,4 +1,4 @@
-package com.techJobservice;
+package com.techJob.service;
 
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;

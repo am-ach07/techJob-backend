@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import com.techJob.DTOs.notifications.NotificationsDTO;
 import com.techJob.response.ApiResponse;
 import com.techJob.response.ApiResponseFactory;
-import com.techJobservice.NotificationService;
-import com.techJobservice.NotificationsServiceImp;
+import com.techJob.service.NotificationService;
+import com.techJob.service.NotificationsServiceImp;
 
 import io.swagger.v3.oas.annotations.Operation;
 

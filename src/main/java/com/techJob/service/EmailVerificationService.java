@@ -1,4 +1,4 @@
-package com.techJobservice;
+package com.techJob.service;
 
 import java.time.LocalDateTime;
 

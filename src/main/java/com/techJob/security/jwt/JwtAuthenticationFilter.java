@@ -16,7 +16,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.techJob.domain.entity.User;
 import com.techJob.repository.UserRepository;
 import com.techJob.security.constants.SecurityConstants;
-import com.techJobservice.CustomUserDetailsService;
+import com.techJob.service.CustomUserDetailsService;
 
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
