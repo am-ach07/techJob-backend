@@ -5,6 +5,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -27,24 +29,22 @@ public class FileStorageService {
         }
 
         try {
-
-            String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-
-            Path uploadPath = Paths.get(uploadDir).resolve(folder);
-
-            System.out.println("UPLOAD PATH: " + uploadPath.toAbsolutePath());
-            
-            Files.createDirectories(uploadPath);
-
-            Path filePath = uploadPath.resolve(fileName);
-            
-            System.out.println("===============FILE PATH: " + filePath.toAbsolutePath());
-
-            try (InputStream inputStream = file.getInputStream()) {
-                Files.copy(inputStream, filePath,
-                        StandardCopyOption.REPLACE_EXISTING);
-            }
-
+        	
+	        String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+	        Path uploadPath = Paths.get(uploadDir).resolve(folder);
+	
+	        
+	        Files.createDirectories(uploadPath);
+	
+	        Path filePath = uploadPath.resolve(fileName);
+	        
+	
+	        try (InputStream inputStream = file.getInputStream()) {
+	            Files.copy(inputStream, filePath,
+	                    StandardCopyOption.REPLACE_EXISTING);
+	        }
+        	
+	
             return "/uploads/" + folder + "/" + fileName;
 
         } catch (Exception e) {

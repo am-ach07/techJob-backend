@@ -1,5 +1,6 @@
 package com.techJob.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,7 +36,7 @@ import jakarta.transaction.Transactional;
 public class ImageService {
 
 	
-	private static final Logger log = LoggerFactory.getLogger(SreviceOfferService.class);
+	private static final Logger log = LoggerFactory.getLogger(ImageService.class);
 
 	
 	private final ServiceOfferRepository serviceOfferRepository;
@@ -86,15 +87,17 @@ public class ImageService {
         }
     }
     
-    private void validateImage(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
+    private void validateImage(MultipartFile[] file) {
+        if (file == null || file.length == 0) {
             throw new ImageException("Image file is empty");
         }
-        if (file.getContentType() == null || !file.getContentType().startsWith("image/")) {
-            throw new ImageException("Only image files are allowed");
-        }
-        if (file.getSize() > Constants.IMAGE_MAX_SIZE) {
-            throw new ImageException("Image size must be less than 5MB");
+        for (MultipartFile f : file) {
+			if (f.getContentType() == null || !f.getContentType().startsWith("image/")) {
+				throw new ImageException("Only image files are allowed");
+			}
+			if (f.getSize() > Constants.IMAGE_MAX_SIZE) {
+				throw new ImageException("Image size must be less than 5MB");
+			}
         }
     }
     private ServiceOffer getOfferByPublicIDOrThrow(String offerPublicID) {
@@ -107,7 +110,9 @@ public class ImageService {
     public ImageDTO updateOfferImage(String offerPublicID, String imagePublicID, MultipartFile file) {
         User user = getCurrentUser();
         verifyEmail(user);
-        validateImage(file);
+        MultipartFile[] fileArray=new MultipartFile[1];
+	    fileArray[0]=file;
+        validateImage(fileArray);
         Image image = imageRepository.findByImagePublicID(imagePublicID)
                 .orElseThrow(() -> new ImageException("Image not found"));
         if (!image.getOffer().getOfferPublicID().equals(offerPublicID)) {
@@ -116,6 +121,7 @@ public class ImageService {
         if (!image.getOffer().getArtisan().equals(user.getArtisanProfile())) {
             throw new ImageException("Unauthorized");
         }
+        
         String newUrl = fileStorageService.saveFile(file, "offers");
         String oldUrl = image.getUrl();
         image.setUrl(newUrl);
@@ -182,28 +188,42 @@ public class ImageService {
     
  // =================== Image Handling ===================
     @Transactional
-    public ImageDTO uploadOfferImage(String offerPublicID, MultipartFile file) {
+    public List<ImageDTO> uploadOfferImage(String offerPublicID, MultipartFile[] files) {
         User user = getCurrentUser();
         verifyEmail(user);
         verifyArtisan(user);
         ServiceOffer offer = getOfferByPublicIDOrThrow(offerPublicID);
+
         if (!offer.getArtisan().equals(user.getArtisanProfile())) {
-            log.warn("User {} tried to upload image to offer {} not owned by them", user.getEmail(), offerPublicID);
             throw new AccessDeniedException("You are not allowed to upload image to this offer");
         }
-        validateImage(file);
-        String url = fileStorageService.saveFile(file, "offers");
-        Image image = new Image();
-        image.setUrl(url);
-        image.setImagePublicID(UUID.randomUUID().toString());
-        image.setPosition(offer.getImages().size() + 1);
-        image.setOffer(offer);
-        imageRepository.save(image);
-        log.info("Image uploaded for offer {} by user {}", offerPublicID, user.getEmail());
-        
-        return generalMapper.toDTO(image);
-        
-        
+
+        validateImage(files);
+
+        List<ImageDTO> uploadedImages = new ArrayList<>();
+
+        int nextPosition = offer.getImages().size() + 1;
+
+        for (MultipartFile f : files) {
+            // أنشئ كائن جديد داخل كل دورة
+            Image image = new Image();
+
+            // احفظ الملف واحصل على url
+            String url = fileStorageService.saveFile(f, "offers");
+
+            image.setUrl(url);
+            image.setImagePublicID(UUID.randomUUID().toString());
+            image.setPosition(nextPosition++);
+            image.setOffer(offer);
+
+            Image savedImage = imageRepository.save(image);
+
+            uploadedImages.add(generalMapper.toDTO(savedImage));
+        }
+
+        log.info("Uploaded {} images for offer {}", files.length, offerPublicID);
+
+        return uploadedImages;
     }
     
     
@@ -221,9 +241,12 @@ public class ImageService {
 	//==================================upload profile image============================================================
 	@Transactional
 	public String uploadProfileImage(MultipartFile file) {
-
+		
+		
 	    User user = getCurrentUser();
-	    validateImage(file);
+	    MultipartFile[] fileArray=new MultipartFile[1];
+	    fileArray[0]=file;
+	    validateImage(fileArray);
 
 	    String oldImage = user.getProfilImageUrl();
 

@@ -12,10 +12,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import com.techJob.DTOs.PaginationAndSortDTO;
 import com.techJob.DTOs.UpdateProfileRequest;
 import com.techJob.DTOs.notifications.NotificationsDTO;
+import com.techJob.DTOs.serviceOffer.ServiceOfferDTO;
 import com.techJob.response.ProfileResponse;
 import com.techJob.security.jwt.CookieService;
 import com.techJob.service.NotificationsServiceImp;
 import com.techJob.service.OrderService;
+import com.techJob.service.ServiceOfferService;
 import com.techJob.service.UserSettingService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,13 +31,15 @@ public class ViewController {
 	private NotificationsServiceImp notificationsServiceImp;
 	private final CookieService cookieService;
 	private final OrderService orderService;
+	private final ServiceOfferService serviceOfferService;
 	
-	public ViewController(UserSettingService userSettingService,OrderService orderService,CookieService cookieService,NotificationsServiceImp notificationsServiceImp) {
+	public ViewController(UserSettingService userSettingService,OrderService orderService,CookieService cookieService,NotificationsServiceImp notificationsServiceImp, ServiceOfferService serviceOfferService) {
 		super();
 		this.userSettingService = userSettingService;
 		this.notificationsServiceImp=notificationsServiceImp;
 		this.cookieService=cookieService;
 		this.orderService=orderService;
+		this.serviceOfferService = serviceOfferService;
 	}
 	@GetMapping("/")
 	public String home () {
@@ -123,14 +127,29 @@ public class ViewController {
 	@GetMapping("/orders")
 	public String  order(
 			Model model,
-			PaginationAndSortDTO dto) {
+			PaginationAndSortDTO dto,
+			HttpServletRequest request) {
+		
 		model.addAttribute("order",orderService.clientOrders(dto));
 		return "orders";
 	}
 	
 	@GetMapping("/offers")
-	public String  offers() {
-		return "offers";
+	public String  offers(Model model, PaginationAndSortDTO dto) {
+        // Fetch public offers (paged)
+        var offersPage = serviceOfferService.getPublicOffer(dto);
+        model.addAttribute("offers", offersPage.getContent());
+        model.addAttribute("page", offersPage);
+        return "offers";
+    }
+	
+	@GetMapping("/offers/{id}")
+	public String offerDetails(@PathVariable String id, Model model, HttpServletRequest request) {
+		var offer = serviceOfferService.getOfferByPublicID(id); // Use correct method
+		model.addAttribute("offer", offer);
+		String csrfToken = cookieService.extractCsrfToken(request);
+		model.addAttribute("csrfToken", csrfToken);
+		return "offer-details";
 	}
 	
 }

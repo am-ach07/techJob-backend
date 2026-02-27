@@ -26,9 +26,7 @@ public class ServiceOfferDTO {
     private Set<ExtraServiceOfferDTO> extraServiceOffers;
 
     //===========helper Methodes======================
-    public void addServiceExtras(ExtraServiceOfferDTO extraService) {
-    	this.extraServiceOffers.add(extraService);
-    }
+    
     public void addImages(ImageDTO image) {
     	this.images.add(image);
     }

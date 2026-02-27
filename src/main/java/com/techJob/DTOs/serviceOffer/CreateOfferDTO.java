@@ -1,11 +1,10 @@
 package com.techJob.DTOs.serviceOffer;
 
 import java.math.BigDecimal;
-import java.util.Set;
 
-import com.techJob.domain.entity.Image;
 import com.techJob.domain.enums.Category;
 
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -17,8 +16,10 @@ public class CreateOfferDTO {
 	private String title;
 	@NotBlank(message = "you didn't enser a description!!!")
 	private String description;
+	@NotNull(message = "you didn't enser a category!!!")
 	private Category category;
 	@NotNull(message = "you didn't enser a price!!!")
+	@DecimalMin(value = "0.01", inclusive = true, message = "Price must be positive")
 	private BigDecimal price;
 	
 

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${offer.title}">Offer Details</title>
+    <link rel="stylesheet" th:href="@{/css/fragments.css}" />
+    <link rel="stylesheet" th:href="@{/css/offer-details.css}" />
+</head>
+<body>
+    <div th:replace="fragments/header :: header"></div>
+    <main class="offer-details-container">
+        <section class="offer-card">
+            <div class="gallery">
+                <div class="gallery-main">
+                    <img th:src="${offer.images[0]?.url}" alt="Main Image" id="mainImage" />
+                </div>
+                <div class="gallery-thumbs">
+                    <img th:each="img : ${#lists.sort(offer.images, 'position')}" th:src="${img.url}" th:alt="'Image ' + ${img.position}" th:onclick="|showImage('${img.url}')|" />
+                </div>
+            </div>
+            <div class="offer-info">
+                <h1 th:text="${offer.title}"></h1>
+                <p class="offer-category" th:text="${offer.category}"></p>
+                <p class="offer-description" th:text="${offer.description}"></p>
+                <div class="offer-artisan">
+                    <span class="artisan-label">By:</span>
+                    <span class="artisan-name" th:text="${offer.artisan.fullName}"></span>
+                </div>
+                <div class="offer-price">
+                    <span th:text="${#numbers.formatDecimal(offer.price, 1, 'COMMA', 2, 'POINT')}"></span> <span class="currency">DA</span>
+                </div>
+                <div class="offer-actions">
+                    <form th:action="@{'/offers/edit/' + ${offer.id}}" method="get" sec:authorize="hasRole('ARTISAN') and #authentication.principal.id == ${offer.artisan.id}">
+                        <button type="submit" class="btn btn-edit">Edit</button>
+                    </form>
+                    <form th:action="@{'/offers/delete/' + ${offer.id}}" method="post" sec:authorize="hasRole('ARTISAN') and #authentication.principal.id == ${offer.artisan.id}">
+                        <input type="hidden" name="_csrf" th:value="${csrfToken}" />
+                        <button type="submit" class="btn btn-delete">Delete</button>
+                    </form>
+                    <form th:action="@{'/orders/new?offerId=' + ${offer.id}}" method="post" sec:authorize="hasRole('CUSTOMER')">
+                        <input type="hidden" name="_csrf" th:value="${csrfToken}" />
+                        <button type="submit" class="btn btn-order">Order</button>
+                    </form>
+                    <a th:href="@{/login}" class="btn btn-login" sec:authorize="isAnonymous()">Login to Order</a>
+                </div>
+            </div>
+        </section>
+    </main>
+    <div th:replace="fragments/footer :: footer"></div>
+    <script th:src="@{/js/offer-details.js}"></script>
+</body>
+</html>

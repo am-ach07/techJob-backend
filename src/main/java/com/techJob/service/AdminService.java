@@ -84,7 +84,7 @@ public class AdminService {
                 .orElseThrow(() -> new OfferNotFoundException(offerPublicID));
     }
  
-    private ServiceOfferDTO mapOfferWithProfile(ServiceOffer offer) {
+    private ServiceOfferDTO mapWithProfile(ServiceOffer offer) {
 
         ServiceOfferDTO dto = generalMapper.toDTO(offer);
 
@@ -152,7 +152,7 @@ public class AdminService {
         );
         Page<ServiceOffer> page = serviceOfferRepository.findAll(pageable);
         log.info("Admin fetched all offers");
-        return page.map(this::mapOfferWithProfile);
+        return page.map(this::mapWithProfile);
     }
     
     
@@ -163,7 +163,7 @@ public class AdminService {
         verifyAdmin(user);
         ServiceOffer offer = getOfferByPublicIDOrThrow(offerPublicID);
         log.info("Admin fetched offer {}", offerPublicID);
-        return mapOfferWithProfile(offer);
+        return mapWithProfile(offer);
     }
 	
 	

@@ -1,6 +1,7 @@
 package com.techJob.controller.rest;
 
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
@@ -19,12 +20,9 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.techJob.DTOs.PaginationAndSortDTO;
 import com.techJob.DTOs.image.ImageDTO;
 import com.techJob.DTOs.serviceOffer.CreateExtraServiceOfferDTO;
-import com.techJob.DTOs.serviceOffer.CreateOfferDTO;
 import com.techJob.DTOs.serviceOffer.CreateServiceOfferRequest;
 import com.techJob.DTOs.serviceOffer.ExtraServiceOfferDTO;
 import com.techJob.DTOs.serviceOffer.ServiceOfferDTO;
@@ -34,8 +32,9 @@ import com.techJob.domain.enums.OffersStatus;
 import com.techJob.mapper.ReaderJson;
 import com.techJob.response.ApiResponse;
 import com.techJob.response.ApiResponseFactory;
+import com.techJob.service.ExtraServiceOfferService;
 import com.techJob.service.ImageService;
-import com.techJob.service.SreviceOfferService;
+import com.techJob.service.ServiceOfferService;
 
 import jakarta.validation.Valid;
 
@@ -44,19 +43,22 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/v1")
 public class ServiceOfferRestController {
 	private final ReaderJson readerJson;
-	private final SreviceOfferService serviceOfferService;
+	private final ServiceOfferService serviceOfferService;
 	private final ImageService imageService;
+	private final ExtraServiceOfferService extraServiceOfferService;
 
 	
 	
 	public ServiceOfferRestController(
-			SreviceOfferService serviceOfferService,
+			ServiceOfferService serviceOfferService,
 			ReaderJson readerJson,
-			ImageService imageService) {
+			ImageService imageService,
+			ExtraServiceOfferService extraServiceOfferService) {
 		super();
 		this.serviceOfferService = serviceOfferService;
 		this.readerJson=readerJson;
 		this.imageService=imageService;
+		this.extraServiceOfferService = extraServiceOfferService;
 	}
 
 //============================show all offers of artisan ======================================
@@ -75,16 +77,17 @@ public class ServiceOfferRestController {
 		    consumes = MediaType.MULTIPART_FORM_DATA_VALUE
 		)
 		public ResponseEntity<ApiResponse<ServiceOfferDTO>> createOffer(
-		        @RequestPart("data") String json,
-		        @RequestPart(value = "file", required = false) MultipartFile file
-		) throws JsonMappingException, JsonProcessingException  {
+		        @RequestPart("data") @Valid CreateServiceOfferRequest dto,
+		        @RequestPart(value = "file", required = false) MultipartFile[] file
+		) {
 
 		
-			ServiceOfferDTO offer=serviceOfferService.createOffer(json, file);
+			ServiceOfferDTO offer=serviceOfferService.createOffer(dto, file);
 		
 
 		    return ApiResponseFactory.ok(offer, "Offer created successfully");
 		}
+	
 	
 	//=============================show one offer of artian ===================================
 	
@@ -171,12 +174,12 @@ public class ServiceOfferRestController {
 	//=============================add image to offers ================================
 	@PreAuthorize("hasRole('ARTISAN')")
 	@PostMapping("/me/offers/{offerId}/images")
-	public ResponseEntity<ApiResponse<ImageDTO>> addImagesToOffers(
+	public ResponseEntity<ApiResponse<List<ImageDTO>>> addImagesToOffers(
 			@PathVariable String offerId,
-			@RequestParam("file") MultipartFile file){
+			@RequestParam("file") MultipartFile[] file){
 		
 		
-		ImageDTO image =imageService.uploadOfferImage(offerId, file);
+		List<ImageDTO> image =imageService.uploadOfferImage(offerId, file);
 		
 		
 		return ApiResponseFactory.ok(image, "images created successfully");	
@@ -220,7 +223,7 @@ public class ServiceOfferRestController {
 			@PathVariable String offerId){
 		
 		
-		List<ExtraServiceOfferDTO> dto= serviceOfferService.getMyExtraServicesForOffer(offerId);
+		List<ExtraServiceOfferDTO> dto= extraServiceOfferService.getMyExtraServicesForOffer(offerId);
 		
 		
 		return ApiResponseFactory.ok(dto, "extras services fetched successfully");	
@@ -229,12 +232,12 @@ public class ServiceOfferRestController {
 	//=========================add extra services to offers==============================
 	@PreAuthorize("hasRole('ARTISAN')")
 	@PostMapping("/me/offers/{offerId}/extras")
-	public ResponseEntity<ApiResponse<ExtraServiceOfferDTO>> addExtrasServicesToOffer(
+	public ResponseEntity<ApiResponse<Set<ExtraServiceOfferDTO>>> addExtrasServicesToOffer(
 			@PathVariable String offerId,
-			@RequestBody @Valid CreateExtraServiceOfferDTO dto){
+			@RequestBody @Valid Set<CreateExtraServiceOfferDTO> dto){
 		
 		
-		ExtraServiceOfferDTO extraService= serviceOfferService.createExtraServiceOffer(dto, offerId);
+		Set<ExtraServiceOfferDTO> extraService= extraServiceOfferService.createExtraServiceOffer(dto, offerId);
 		
 		
 		return ApiResponseFactory.ok(extraService, "extras services created successfully");	
@@ -248,7 +251,7 @@ public class ServiceOfferRestController {
 			@RequestBody @Valid UpdateExtraServiceOfferDTO dto){
 		
 		
-		ExtraServiceOfferDTO extraService= serviceOfferService.updateExtraServiceOffer(dto, offerId, extraId);
+		ExtraServiceOfferDTO extraService= extraServiceOfferService.updateExtraServiceOffer(dto, offerId, extraId);
 		
 		
 		return ApiResponseFactory.ok(extraService, "extras services updated successfully");	
@@ -261,7 +264,7 @@ public class ServiceOfferRestController {
 			@PathVariable String extraId){
 		
 		
-		 serviceOfferService.deleteExtraServiceOffer(offerId, extraId);
+		extraServiceOfferService.deleteExtraServiceOffer(offerId, extraId);
 		
 		return ApiResponseFactory.ok(null, "extras services deleted successfully");	
 	}

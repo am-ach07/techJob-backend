@@ -13,7 +13,6 @@
 
         .content { flex: 1; padding: 40px; }
         .offers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
-        
         /* Professional card design */
         .offer-card { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: transform 0.3s ease; }
         .offer-card:hover { transform: translateY(-10px); }
@@ -41,46 +40,40 @@
     <div class="content">
         <h1 style="margin-bottom: 30px;">Latest Available Offers</h1>
         <div class="offers-grid">
-            
-            <div class="offer-card">
-                <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=500" class="offer-image" alt="Web Design">
-                <div class="offer-body">
-                    <span class="offer-tag">Development</span>
-                    <div class="offer-title">Complete E-Commerce Website Design</div>
-                    <div class="offer-desc">Get a fast, responsive online store compatible with all devices, including one month of support.</div>
-                    <div class="offer-footer">
-                        <span class="price">$250</span>
-                        <button class="btn-claim" onclick="alert('Your request has been sent!')">Order Now</button>
+            <!-- Dynamic offers rendering -->
+            <th:block th:if="${offers != null and #lists.size(offers) > 0}">
+                <div class="offer-card" th:each="offer : ${offers}" 
+				><!--th:onclick="|window.location='/offers/' + ${offer.offerPublicID}|"-->
+					
+<!--					<div style="position: absolute; top: 15px;
+					 right: 15px; background: rgba(0,0,0,0.6);
+					  color: white; padding: 4px 8px; border-radius: 5px;
+					   font-size: 0.75rem;" th:text="${offer.offersStatus}"></div>-->
+                    <img th:src="${offer.images != null and !offer.images.isEmpty() ? offer.images.get(0).url : '/uploads/offers/default-offer.png'}" class="offer-image" th:alt="${offer.title}" />
+                    
+					<div class="offer-body">
+                        <span class="offer-tag" th:text="${offer.category}">Category</span>
+                        <div class="offer-title" th:text="${offer.title}">Offer Title</div>
+                        <div class="offer-desc" th:text="${offer.description}">Offer Description</div>
+                        <div class="offer-footer">
+                            <span class="price" th:text="${offer.price}">$0</span>
+                            <form th:action="@{'/orders/new'}" method="post" style="margin:0;">
+                                <input type="hidden" name="offerId" th:value="${offer.offerPublicID}" />
+                                <button class="btn-claim" type="submit">Order Now</button>
+                            </form>
+                        </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="offer-card">
-                <img src="https://images.unsplash.com/photo-1626785774573-4b799315345d?w=500" class="offer-image" alt="Brand Identity">
-                <div class="offer-body">
-                    <span class="offer-tag">Design</span>
-                    <div class="offer-title">Brand Identity & Logo Design</div>
-                    <div class="offer-desc">We create a unique logo that professionally represents your brand.</div>
-                    <div class="offer-footer">
-                        <span class="price">$80</span>
-                        <button class="btn-claim">Order Now</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="offer-card">
-                <img src="https://images.unsplash.com/photo-1556761175-b413da4baf72?w=500" class="offer-image" alt="Marketing">
-                <div class="offer-body">
-                    <span class="offer-tag">Marketing</span>
-                    <div class="offer-title">Advertising Campaign Management</div>
-                    <div class="offer-desc">Reach thousands of targeted customers through social media platforms.</div>
-                    <div class="offer-footer">
-                        <span class="price">$150</span>
-                        <button class="btn-claim">Order Now</button>
-                    </div>
-                </div>
-            </div>
-
+            </th:block>
+            <th:block th:if="${offers == null or #lists.size(offers) == 0}">
+                <div style="grid-column: 1/-1; text-align: center; color: #888; font-size: 1.2rem;">No offers available at the moment.</div>
+            </th:block>
+        </div>
+        <!-- Pagination controls (optional) -->
+        <div th:if="${page != null}" style="margin-top: 30px; text-align: center;">
+            <button th:if="${page.hasPrevious()}" th:onclick="|window.location='?page=${page.number - 1}&size=${page.size}'|">Previous</button>
+            <span th:text="${page.number + 1}"></span> / <span th:text="${page.totalPages}"></span>
+            <button th:if="${page.hasNext()}" th:onclick="|window.location='?page=${page.number + 1}&size=${page.size}'|">Next</button>
         </div>
     </div>
 </body>

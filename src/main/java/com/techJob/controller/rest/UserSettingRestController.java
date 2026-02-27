@@ -75,12 +75,6 @@ public class UserSettingRestController {
 		String url=imageService.uploadProfileImage(file);
 		return ApiResponseFactory.ok(url, "Profile image uploaded successfully");
 	}
-	@PatchMapping("/image")
-	public ResponseEntity<ApiResponse<String>> updateProfileImage(
-			 @RequestParam("file") MultipartFile file) {
-		String url= imageService.uploadProfileImage(file);
-		return ApiResponseFactory.ok(url, "Profile image updated successfully");
-	}
 	@DeleteMapping("/image")
 	public ResponseEntity<ApiResponse<Void>> deleteProfileImage() {
 		imageService.deleteProfileImage();

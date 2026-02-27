@@ -1,6 +1,7 @@
 package com.techJob.service;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -51,35 +52,32 @@ import com.techJob.response.ProfileResponse;
 import jakarta.transaction.Transactional;
 
 @Service
-public class SreviceOfferService {
-    private static final Logger log = LoggerFactory.getLogger(SreviceOfferService.class);
+public class ServiceOfferService {
+    private static final Logger log = LoggerFactory.getLogger(ServiceOfferService.class);
 
     private final ServiceOfferRepository serviceOfferRepository;
     private final UserRepository userRepository;
     private final GeneralMapper generalMapper;
-    private final ReaderJson readerJson;
     private final ImageService imageService;
     private final NotificationsServiceImp notificationsServiceImp;
-    private final ExtraServiceOfferRepository extraServiceOfferRepository;
     private final AuthAuditLogService auditLogService;
+    private final ExtraServiceOfferService extraServiceOfferService;
 
-    public SreviceOfferService(
+    public ServiceOfferService(
     		ServiceOfferRepository serviceOfferRepository,
     		UserRepository userRepository,
     		ImageService imageService,
-    		ReaderJson readerJson,
     		AuthAuditLogService auditLogService,
     		GeneralMapper generalMapper,
     		NotificationsServiceImp notificationsServiceImp,
-    		ExtraServiceOfferRepository extraServiceOfferRepository) {
+    		ExtraServiceOfferService extraServiceOfferService) {
         this.serviceOfferRepository = serviceOfferRepository;
         this.userRepository = userRepository;
 		this.auditLogService=auditLogService;
         this.generalMapper = generalMapper;
-        this.readerJson=readerJson;
         this.imageService=imageService;
         this.notificationsServiceImp = notificationsServiceImp;
-        this.extraServiceOfferRepository = extraServiceOfferRepository;
+		this.extraServiceOfferService = extraServiceOfferService;
     }
 
     // =================== Utility Methods ===================
@@ -104,33 +102,14 @@ public class SreviceOfferService {
         }
     }
 
-    private void verifyAdmin(User user) {
-        if (!Roles.ADMIN.equals(user.getRole())) {
-            log.warn("User {} attempted admin action without admin role", user.getEmail());
-            throw new InvalidOrderException("You are not allowed to perform this action");
-        }
-    }
+    
 
     private ServiceOffer getOfferByPublicIDOrThrow(String offerPublicID) {
         return serviceOfferRepository.findByOfferPublicID(offerPublicID)
                 .orElseThrow(() -> new OfferNotFoundException(offerPublicID));
     }
 
-    private ExtraServiceOffer getExtraServiceByPublicIDOrThrow(String extraOfferPublicID) {
-        return extraServiceOfferRepository.findByExtraOfferPublicID(extraOfferPublicID)
-                .orElseThrow(() -> new OfferNotFoundException("ExtraServiceOffer not found: " + extraOfferPublicID));
-    }
-
     
-
-    private void checkDuplicateExtraServiceTitle(ServiceOffer offer, String title, String excludePublicID) {
-        boolean exists = offer.getExtraServiceOffers().stream()
-                .anyMatch(extra -> extra.getTitle().equalsIgnoreCase(title)
-                        && (excludePublicID == null || !extra.getExtraOfferPublicID().equals(excludePublicID)));
-        if (exists) {
-            throw new InvalidOfferException("Duplicate extra service title for this offer");
-        }
-    }
 
  
     private ServiceOfferDTO mapOfferWithProfile(ServiceOffer offer) {
@@ -161,7 +140,22 @@ public class SreviceOfferService {
 
         return dto;
     }
-
+    // create offer--------------------------------------------------------------------------------
+    @Transactional
+    private ServiceOfferDTO createOffer(CreateOfferDTO dto) {
+        User user = getCurrentUser();
+        verifyEmail(user);
+        verifyArtisan(user);
+        ArtisanProfile profile = user.getArtisanProfile();
+        ServiceOffer offer = generalMapper.toEntity(dto);
+        offer.setOfferPublicID(UUID.randomUUID().toString());
+        offer.setOffersStatus(OffersStatus.ACTIVE);
+        profile.addService(offer);
+        serviceOfferRepository.save(offer);
+        notificationsServiceImp.createNotification(user.getPublicID(), "My Offers", "Your offer created successfully");
+        log.info("ServiceOffer created: {} by user {}", offer.getOfferPublicID(), user.getEmail());
+        return generalMapper.toDTO(offer);
+    }
     
     private void validateOffersStatusTransition(OffersStatus current, OffersStatus target) {
 
@@ -192,37 +186,36 @@ public class SreviceOfferService {
             default -> throw new InvalidActionException("Unsupported status");
         }
     }
+    
+    
+
     @Transactional
-    public ServiceOfferDTO createOffer(String json, MultipartFile file)
-            throws JsonProcessingException {
+    public ServiceOfferDTO createOffer(CreateServiceOfferRequest dto, MultipartFile[] file)
+             {
 
         User user = getCurrentUser();
-
-        CreateServiceOfferRequest dto =
-                readerJson.readJsonCreating(json);
-
+        
         CreateOfferDTO offerDto = dto.getOfferDto();
-        CreateExtraServiceOfferDTO extraDto = dto.getExtraDto();
+        Set<CreateExtraServiceOfferDTO> extraDto = dto.getExtraDto();
 
         // create main offer
         ServiceOfferDTO offer = createOffer(offerDto);
-
+        
         // create extra service
-        if (extraDto != null && extraDto.getTitle() != null) {
-
-            ExtraServiceOfferDTO extra =
-                    createExtraServiceOffer(extraDto, offer.getOfferPublicID());
-
-            offer.addServiceExtras(extra);
+        if(extraDto!=null) {
+        	Set<ExtraServiceOfferDTO> extras=extraServiceOfferService
+        			.createExtraServiceOffer(extraDto,offer.getOfferPublicID());
+        	offer.setExtraServiceOffers(extras);
         }
+		
 
         // upload image
-        if (file != null && !file.isEmpty()) {
+        if (file != null && file.length != 0&&file[0] != null && !file[0].isEmpty()) {
 
-            ImageDTO image =
+            List<ImageDTO> image =
                     imageService.uploadOfferImage(offer.getOfferPublicID(), file);
 
-            offer.addImages(image);
+            offer.setImages(image);
         }
 
         log.info("Offer created successfully by user {}", user.getEmail());
@@ -238,22 +231,7 @@ public class SreviceOfferService {
    
     
     
-    // create offer--------------------------------------------------------------------------------
-    @Transactional
-    private ServiceOfferDTO createOffer(CreateOfferDTO dto) {
-        User user = getCurrentUser();
-        verifyEmail(user);
-        verifyArtisan(user);
-        ArtisanProfile profile = user.getArtisanProfile();
-        ServiceOffer offer = generalMapper.toEntity(dto);
-        offer.setOfferPublicID(UUID.randomUUID().toString());
-        offer.setOffersStatus(OffersStatus.ACTIVE);
-        profile.addService(offer);
-        serviceOfferRepository.save(offer);
-        notificationsServiceImp.createNotification(user.getPublicID(), "My Offers", "Your offer created successfully");
-        log.info("ServiceOffer created: {} by user {}", offer.getOfferPublicID(), user.getEmail());
-        return generalMapper.toDTO(offer);
-    }
+   
 	//get my offer--------------------------------------------------------------------------------
     public Page<ServiceOfferDTO> getMyOffer(PaginationAndSortDTO dto) {
 
@@ -387,85 +365,5 @@ public class SreviceOfferService {
 
     
     
-    // =================== ExtraServiceOffer CRUD ===================
-    @Transactional
-    public ExtraServiceOfferDTO createExtraServiceOffer(CreateExtraServiceOfferDTO dto,String offerPublicID) {
-        User user = getCurrentUser();
-        verifyEmail(user);
-        verifyArtisan(user);
-        ServiceOffer offer = getOfferByPublicIDOrThrow(offerPublicID);
-        if (!offer.getArtisan().getUser().equals(user)) {
-            log.warn("User {} tried to add extra service to offer {} not owned by them", user.getEmail(), offer.getOfferPublicID());
-            throw new InvalidOfferException("You are not allowed to add extra services to this offer");
-        }
-        checkDuplicateExtraServiceTitle(offer, dto.getTitle(), null);
-        ExtraServiceOffer extra = generalMapper.toEntity(dto);
-        extra.setExtraOfferPublicID(UUID.randomUUID().toString());
-        extra.setServiceOffer(offer);
-        extraServiceOfferRepository.save(extra);
-        log.info("ExtraServiceOffer created: {} for offer {} by user {}", extra.getExtraOfferPublicID(), offer.getOfferPublicID(), user.getEmail());
-        return generalMapper.toDTO(extra);
-    }
-
-    @Transactional
-    public ExtraServiceOfferDTO updateExtraServiceOffer(UpdateExtraServiceOfferDTO dto,String offerPublicID,String extraServicePublicID) {
-        User user = getCurrentUser();
-        verifyEmail(user);
-        verifyArtisan(user);
-        ServiceOffer offer = getOfferByPublicIDOrThrow(offerPublicID);
-        ExtraServiceOffer extra = getExtraServiceByPublicIDOrThrow(extraServicePublicID);
-        
-        if(!offer.getExtraServiceOffers().contains(extra)) {
-        	log.warn("User {} tried to update extra service {}   not owned by them ",user.getEmail(), extraServicePublicID);
-        	throw new InvalidOfferException("extra Service not found in this offers "+extraServicePublicID);
-        }
-        
-        if (!offer.getArtisan().getUser().equals(user)) {
-            log.warn("User {} tried to update extra service {} not owned by them", user.getEmail(), extra.getExtraOfferPublicID());
-            throw new InvalidOfferException("You are not allowed to update this extra service");
-        }
-        checkDuplicateExtraServiceTitle(offer, dto.getTitle(), extra.getExtraOfferPublicID());
-        generalMapper.updateExtraServiceOfferFromDTO(dto, extra);
-        extraServiceOfferRepository.save(extra);
-        log.info("ExtraServiceOffer updated: {} for offer {} by user {}", extra.getExtraOfferPublicID(), offer.getOfferPublicID(), user.getEmail());
-        return generalMapper.toDTO(extra);
-    }
-
-    @Transactional
-    public void deleteExtraServiceOffer(String offerPublicID,String extraServicePublicID) {
-        User user = getCurrentUser();
-        verifyEmail(user);
-        verifyArtisan(user);
-        ServiceOffer offer = getOfferByPublicIDOrThrow(offerPublicID);
-        ExtraServiceOffer extra = getExtraServiceByPublicIDOrThrow(extraServicePublicID);
-        if(!offer.getExtraServiceOffers().contains(extra)) {
-        	log.warn("User {} tried to delete extra service {}   not owned by them ",user.getEmail(), extraServicePublicID);
-        	throw new InvalidOfferException("extra Service not found in this offers "+extraServicePublicID);
-        }
-        if (!offer.getArtisan().getUser().equals(user)) {
-            log.warn("User {} tried to delete extra service {} not owned by them", user.getEmail(), extra.getExtraOfferPublicID());
-            throw new InvalidOfferException("You are not allowed to delete this extra service");
-        }
-        
-        log.info("ExtraServiceOffer deleted: {} for offer {} by user {}", extra.getExtraOfferPublicID(), offer.getOfferPublicID(), user.getEmail());
-        offer.removeExtraService(extra);
-        serviceOfferRepository.save(offer);
-
-    }
-
-    @Transactional
-    public List<ExtraServiceOfferDTO> getMyExtraServicesForOffer(String offerPublicID) {
-        ServiceOffer offer = getOfferByPublicIDOrThrow(offerPublicID);
-        Set<ExtraServiceOffer> extras = offer.getExtraServiceOffers();
-        log.info("Fetched extra services for offer {}", offerPublicID);
-        return extras.stream().map(generalMapper::toDTO).collect(Collectors.toList());
-    }
-    @Transactional
-    public List<ExtraServiceOfferDTO> getPublicExtraServicesForOffer(String offerPublicID) {
-        ServiceOffer offer = serviceOfferRepository.findByOfferPublicIDAndOffersStatus(offerPublicID, OffersStatus.ACTIVE)
-                .orElseThrow(() -> new OfferNotFoundException(offerPublicID));
-        Set<ExtraServiceOffer> extras = offer.getExtraServiceOffers();
-        log.info("Fetched extra services for offer {}", offerPublicID);
-        return extras.stream().map(generalMapper::toDTO).collect(Collectors.toList());
-    }
+    
 }

@@ -1,9 +1,17 @@
 package com.techJob.DTOs.serviceOffer;
 
-public class CreateServiceOfferRequest {
+import java.util.Set;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+
+public class CreateServiceOfferRequest {
+	
+	@Valid
+	@NotNull(message = "you didn't enser an offer!!!")
 	private CreateOfferDTO offerDto;
-	private CreateExtraServiceOfferDTO extraDto;
+	@Valid
+	private Set<CreateExtraServiceOfferDTO> extraDto;
 	
 	
 	
@@ -15,10 +23,10 @@ public class CreateServiceOfferRequest {
 	public void setOfferDto(CreateOfferDTO offerDto) {
 		this.offerDto = offerDto;
 	}
-	public CreateExtraServiceOfferDTO getExtraDto() {
+	public Set<CreateExtraServiceOfferDTO> getExtraDto() {
 		return extraDto;
 	}
-	public void setExtraDto(CreateExtraServiceOfferDTO extraDto) {
+	public void setExtraDto(Set<CreateExtraServiceOfferDTO> extraDto) {
 		this.extraDto = extraDto;
 	}
 	
