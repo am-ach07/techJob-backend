@@ -8,7 +8,7 @@ public enum OrdersStatus {
     COMPLETED,
     CANCELED,
     IN_PROGRESS,
-    ACCEPTED_PENDING_PAYMENT
+    ACCEPTED_PENDING_PAYMENT, DISPUTED
 	
 	
 	

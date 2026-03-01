@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Register</title>
+    <link rel="stylesheet" th:href="@{/css/auth.css}">
+</head>
+<body>
+
+<div class="auth-container">
+
+    <h2>Create Account</h2>
+
+    <div class="error"
+         th:if="${errorMessage}"
+         th:text="${errorMessage}">
+    </div>
+
+    <form th:action="@{/auth/register}"
+          th:object="${registerForm}"
+          method="post">
+
+        <input type="text"
+               th:field="*{username}"
+               placeholder="Username"
+               required />
+	   <input type="hidden"
+			   name="_csrf"
+			   id="csrfInput"/>
+        <input type="email"
+               th:field="*{email}"
+               placeholder="Email"
+               required />
+
+        <input type="password"
+               th:field="*{password}"
+               placeholder="Password"
+               required />
+
+        <select th:field="*{role}">
+            <option value="CLIENT">Client</option>
+            <option value="ARTISAN">Artisan</option>
+        </select>
+
+        <button type="submit">Register</button>
+
+    </form>
+
+    <p>
+        Already have an account?
+        <a th:href="@{/auth/login}">Login</a>
+    </p>
+
+</div>
+
+
+
+<script>
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    const token = getCookie("XSRF-TOKEN");
+    if (token) {
+        document.getElementById("csrfInput").value = token;
+    }
+});
+</script>
+</body>
+</html>

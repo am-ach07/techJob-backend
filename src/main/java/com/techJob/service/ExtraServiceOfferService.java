@@ -1,5 +1,6 @@
 package com.techJob.service;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -90,9 +91,11 @@ public class ExtraServiceOfferService {
     
 
     private void checkDuplicateExtraServiceTitle(ServiceOffer offer, String title, String excludePublicID) {
+    	
         boolean exists = offer.getExtraServiceOffers().stream()
                 .anyMatch(extra -> extra.getTitle().equalsIgnoreCase(title)
                         && (excludePublicID == null || !extra.getExtraOfferPublicID().equals(excludePublicID)));
+        
         if (exists) {
             throw new InvalidOfferException("Duplicate extra service title for this offer");
         }
@@ -120,6 +123,17 @@ public class ExtraServiceOfferService {
             }
         }
     }
+	private void titleValidation(String title) {
+		if (title == null || title.trim().isEmpty()) {
+			throw new InvalidOfferException("Title cannot be empty");
+		}
+	}
+	private void priceValidation(BigDecimal price) {
+		if (price == null || price.compareTo(BigDecimal.ZERO) <= 0) {
+			throw new InvalidOfferException("Price must be greater than 0");
+		}
+	}
+	
 	
 	// =================== ExtraServiceOffer CRUD ===================
     @Transactional
@@ -138,7 +152,9 @@ public class ExtraServiceOfferService {
         validateUniqueTitles(dto);
         Set<ExtraServiceOfferDTO> extras = new HashSet<>();
         for (CreateExtraServiceOfferDTO extraDTO : dto) {
-        	
+        	checkDuplicateExtraServiceTitle(offer,extraDTO.getTitle(),null);
+        	titleValidation(extraDTO.getTitle());
+        	priceValidation(extraDTO.getPrice());
 	        ExtraServiceOffer extra = generalMapper.toEntity(extraDTO);
 	        extra.setExtraOfferPublicID(UUID.randomUUID().toString());
 	        extra.setServiceOffer(offer);
@@ -153,8 +169,11 @@ public class ExtraServiceOfferService {
     @Transactional
     public ExtraServiceOfferDTO updateExtraServiceOffer(UpdateExtraServiceOfferDTO dto,String offerPublicID,String extraServicePublicID) {
         User user = getCurrentUser();
+        
         verifyEmail(user);
         verifyArtisan(user);
+        
+        
         ServiceOffer offer = getOfferByPublicIDOrThrow(offerPublicID);
         ExtraServiceOffer extra = getExtraServiceByPublicIDOrThrow(extraServicePublicID);
         
@@ -168,7 +187,14 @@ public class ExtraServiceOfferService {
             throw new InvalidOfferException("You are not allowed to update this extra service");
         }
         checkDuplicateExtraServiceTitle(offer, dto.getTitle(), extra.getExtraOfferPublicID());
-        generalMapper.updateExtraServiceOfferFromDTO(dto, extra);
+        
+        if(dto.getTitle()!=null&&!dto.getTitle().trim().isEmpty()) {
+			extra.setTitle(dto.getTitle());
+		}
+        if(dto.getPrice()!=null&&dto.getPrice().compareTo(BigDecimal.ZERO) >0) {
+			extra.setPrice(dto.getPrice());
+        }
+        
         extraServiceOfferRepository.save(extra);
         log.info("ExtraServiceOffer updated: {} for offer {} by user {}", extra.getExtraOfferPublicID(), offer.getOfferPublicID(), user.getEmail());
         return generalMapper.toDTO(extra);

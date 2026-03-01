@@ -40,6 +40,7 @@ public class Payment {
 	@ManyToOne
 	@JoinColumn(name = "order_id", nullable = false)
 	private Order order;
+	private Boolean processed=false;
 	
 	
 	
@@ -92,6 +93,12 @@ public class Payment {
 	}
 	public void setOrder(Order order) {
 		this.order = order;
+	}
+	public Boolean getProcessed() {
+		return processed;
+	}
+	public void setProcessed(Boolean processed) {
+		this.processed = processed;		
 	}
 	
 

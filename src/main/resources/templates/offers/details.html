@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Offer Details</title>
+    <link rel="stylesheet" th:href="@{/css/offer-details.css}">
+</head>
+<body>
+
+<div class="container">
+
+    <!-- LEFT SIDE -->
+    <div class="left">
+
+        <h1 th:text="${offer.title}"></h1>
+
+        <!-- Image Gallery -->
+        <div class="gallery">
+            <img th:each="img : ${offer.images}"
+                 th:src="${img.url}"
+                 class="gallery-img"/>
+        </div>
+
+        <p class="description" th:text="${offer.description}"></p>
+
+        <!-- Extras -->
+        <div class="extras" th:if="${offer.extraServiceOffers.size() > 0}">
+            <h3>Extra Services</h3>
+
+            <div class="extra-item"
+                 th:each="extra : ${offer.extraServiceOffers}">
+                <span th:text="${extra.title}"></span>
+                <span th:text="${extra.price} + ' DA'"></span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- RIGHT SIDE -->
+    <div class="right">
+
+        <div class="price-box">
+            <h2 th:text="${offer.price} + ' DA'"></h2>
+
+            <a th:href="@{'/orders/create/' + ${offer.offerPublicID}}"
+               class="order-btn">
+                Order Now
+            </a>
+        </div>
+
+        <div class="artisan-box">
+            <img th:src="${offer.profile.user.profilImageUrl}"
+                 class="profile-img"/>
+
+            <h3 th:text="${offer.profile.user.username}"></h3>
+
+            <p th:text="${offer.profile.artisan.description}"></p>
+
+            <div class="rating">
+                ⭐ <span th:text="${offer.profile.artisan.averageRating}"></span>
+                ( <span th:text="${offer.profile.artisan.ratingCount}"></span> )
+            </div>
+
+            <div class="completed">
+                Completed:
+                <span th:text="${offer.profile.artisan.completedOrder}"></span>
+            </div>
+
+            <div class="verified"
+                 th:if="${offer.profile.artisan.verified}">
+                ✔ Verified Artisan
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

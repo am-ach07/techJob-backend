@@ -1,6 +1,7 @@
 package com.techJob.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,22 +9,30 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.techJob.Constants;
 import com.techJob.DTOs.PaginationAndSortDTO;
 import com.techJob.DTOs.image.ImageDTO;
+import com.techJob.DTOs.order.OrderDTO;
+import com.techJob.DTOs.payments.PaymentDTO;
 import com.techJob.DTOs.serviceOffer.ServiceOfferDTO;
+import com.techJob.DTOs.user.UserDTO;
 import com.techJob.domain.entity.Image;
+import com.techJob.domain.entity.Order;
 import com.techJob.domain.entity.ServiceOffer;
 import com.techJob.domain.entity.User;
 import com.techJob.domain.enums.OffersStatus;
 import com.techJob.domain.enums.Roles;
 import com.techJob.exception.offer.OfferNotFoundException;
 import com.techJob.exception.order.InvalidOrderException;
+import com.techJob.exception.order.OrderNotFoundException;
 import com.techJob.exception.user.UserNotFoundException;
 import com.techJob.mapper.GeneralMapper;
+import com.techJob.repository.OrderRepository;
 import com.techJob.repository.ServiceOfferRepository;
 import com.techJob.repository.UserRepository;
 import com.techJob.response.ProfileResponse;
@@ -45,19 +54,23 @@ public class AdminService {
     private final RefreshTokenService refreshTokenService;
     private final NotificationService notificationService;
 
+	private final OrderRepository orderRepository;
+
     public AdminService(
     		ServiceOfferRepository serviceOfferRepository,
     		UserRepository userRepository,
     		AuthAuditLogService auditLogService,
     		GeneralMapper generalMapper,
     		RefreshTokenService refreshTokenService,
-    		NotificationService notificationService) {
+    		NotificationService notificationService,
+    		OrderRepository orderRepository) {
         this.serviceOfferRepository = serviceOfferRepository;
         this.userRepository = userRepository;
 		this.auditLogService=auditLogService;
         this.generalMapper = generalMapper;
 		this.refreshTokenService = refreshTokenService;
 		this.notificationService = notificationService;
+		this.orderRepository = orderRepository;
     }
     
     
@@ -116,7 +129,33 @@ public class AdminService {
     }
 
     
+    private OrderDTO mapWithProfile(Order order) {
 
+        OrderDTO dto = generalMapper.toDTO(order);
+
+        
+
+        UserDTO client=generalMapper.toDTO(order.getClient());
+
+        // Profile image null-safe handling
+        String profileImage = client.getProfilImageUrl();
+
+        if (profileImage == null) {
+            client.setProfilImageUrl("/uploads/profiles/default-profiles.png"
+            );
+        }
+
+        dto.setClient(client);
+	    dto.setOfferPath(Constants.PATH_ME_OFFERS+ order.getService().getOfferPublicID());
+
+	    if(order.getPayment()!=null &&!order.getPayment().isEmpty()) {
+	    		        PaymentDTO paymentDTO = generalMapper.toDTO(order.getPayment().get(0));
+	    		        paymentDTO.setPaymentUrl(Constants.PATH_ME_PAYMENTS + paymentDTO.getPaymentPublicID());
+	        dto.setPayment(List.of(paymentDTO));
+	    }
+	    
+        return dto;
+    }
 	
 	
 	
@@ -231,6 +270,41 @@ public class AdminService {
   		userRepository.delete(user);
   	}
 	
+
+	//get order by publicID (admin)
+		public OrderDTO getByPublicID(String publicID) {
+			User user=getCurrentUser();
+			verifyAdmin(user);
+			Order order=orderRepository.findByOrderPublicID(publicID)
+					.orElseThrow(()->new OrderNotFoundException(publicID));
+			
+			return mapWithProfile(order);
+		
+		}
 	
+	
+
+
+
+
+
+	//get all orders (admin)
+	public Page<OrderDTO> getAllOrders(PaginationAndSortDTO dto) {
+
+		User user=getCurrentUser();
+		
+		verifyAdmin(user);
+	    Pageable pageable = PageRequest.of(
+	            dto.getPage(),
+	            dto.getSize(),
+	            dto.getSort() != null
+	                    ? dto.getSort().toSpringSort()
+	                    : Sort.by("createdAt").descending()
+	    );
+
+	    Page<Order> page = orderRepository.findAll(pageable);
+
+	    return page.map(this::mapWithProfile);
+	}
 	
 }

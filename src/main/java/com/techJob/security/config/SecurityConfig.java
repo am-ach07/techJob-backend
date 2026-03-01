@@ -66,7 +66,7 @@ public class SecurityConfig {
                 .requestMatchers(SecurityConstants.AUTH_API_PATH + "**").permitAll()
                 
                 // Web Authentication
-                .requestMatchers(SecurityConstants.LOGIN_PATH, SecurityConstants.SIGNUP_PATH).permitAll()
+                .requestMatchers(SecurityConstants.LOGIN_PATH, SecurityConstants.REGISTER_PATH,"/css/**","/js/**").permitAll()
                 
                 // أي شيء آخر يحتاج مصادقة
                 .anyRequest().authenticated()

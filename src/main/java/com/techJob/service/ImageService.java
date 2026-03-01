@@ -180,7 +180,8 @@ public class ImageService {
     	User user=getCurrentUser();
     	verifyArtisan(user);
     	verifyEmail(user);
-    	ServiceOffer offer = getOfferByPublicIDOrThrow(offerPublicID);
+    	ServiceOffer offer = serviceOfferRepository.findByOfferPublicIDAndOffersStatus(offerPublicID, OffersStatus.ACTIVE)
+                .orElseThrow(() -> new OfferNotFoundException(offerPublicID));
         Image image = imageRepository.findByOfferAndImagePublicID(offer, imagePublicID)
                 .orElseThrow(() -> new ImageException("Image not found"));
         return generalMapper.toDTO(image);

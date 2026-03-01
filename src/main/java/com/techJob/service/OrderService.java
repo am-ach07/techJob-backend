@@ -1,6 +1,7 @@
 package com.techJob.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -102,12 +103,7 @@ public class OrderService {
 	            .findByUsernameOrEmail(email, email)
 	            .orElseThrow(() -> new UserNotFoundException(email));
 	}
-	//verify admin role
-	 private void verficationAdmin(User user) {
-			if(!user.getRole().equals(Roles.ADMIN)) {
-				throw new InvalidOrderException("You are not allowed to view this order");
-			}
-		}
+	
 	 //verify email verification
 	private void verificationEmail(User user) {
 		if(!user.getEmailVerified())
@@ -148,7 +144,7 @@ public class OrderService {
 	    return order;
 	}
 
-	private OrderDTO mapOrderWithProfile(Order order) {
+	private OrderDTO mapWithProfile(Order order) {
 
         OrderDTO dto = generalMapper.toDTO(order);
 
@@ -167,6 +163,12 @@ public class OrderService {
         dto.setClient(client);
 	    dto.setOfferPath(Constants.PATH_ME_OFFERS+ order.getService().getOfferPublicID());
 
+	    if(order.getPayment()!=null &&!order.getPayment().isEmpty()) {
+	    		        PaymentDTO paymentDTO = generalMapper.toDTO(order.getPayment().get(0));
+	    		        paymentDTO.setPaymentUrl(Constants.PATH_ME_PAYMENTS + paymentDTO.getPaymentPublicID());
+	        dto.setPayment(List.of(paymentDTO));
+	    }
+	    
         return dto;
     }
 	//reaction of artisan
@@ -175,6 +177,9 @@ public class OrderService {
         
         if (order.getStatus() != OrdersStatus.PENDING_ARTISAN_ACCEPTANCE) {
             throw new InvalidActionException("Invalid Action ");
+        }
+        if(order.getPaymentStatus() != PaymentStatus.UNPAID) {
+            throw new InvalidActionException("Order already processed");
         }
         order.setAcceptedAt(LocalDateTime.now());
         order.setStatus(OrdersStatus.ACCEPTED_PENDING_PAYMENT);
@@ -185,7 +190,16 @@ public class OrderService {
                 "Your order was accepted. Please complete the deposit payment."
 
         );
-        return mapOrderWithProfile(order);
+        
+        PaymentDTO dto = paymentService.createDepositPayment(order);
+
+	    notificationsServiceImp.createNotification(
+	        order.getClient().getPublicID(),
+	        "Complete payment",
+	        "Please pay the deposit: " + dto.getPaymentUrl()
+	    );
+	    
+        return mapWithProfile(order);
     }
 	//reject order
 	private OrderDTO rejectOrder(Order order) {
@@ -201,7 +215,7 @@ public class OrderService {
                 "Order Update",
                 "Your order has been " +OrdersStatus.REJECTED.toString().toLowerCase()
         );
-        return mapOrderWithProfile(order);
+        return mapWithProfile(order);
     }
 	//cancel order 
 	
@@ -217,7 +231,7 @@ public class OrderService {
                 "Order Update",
                 " Order"+order.getOrderPublicID()+" has been " +OrdersStatus.CANCELED.toString().toLowerCase()
         );
-		return mapOrderWithProfile(order);
+		return mapWithProfile(order);
 		
 	}
 	//complete order 
@@ -246,20 +260,11 @@ public class OrderService {
 	        log.error("Notification failed for completed order {}", order.getOrderPublicID());
 	    }
 
-	    return mapOrderWithProfile(order);
+	    return mapWithProfile(order);
 	}
 
 	
-	// payment
-	private void advancePayment(Order order) {
-	    PaymentDTO dto = paymentService.createDepositPayment(order);
-
-	    notificationsServiceImp.createNotification(
-	        order.getClient().getPublicID(),
-	        "Complete payment",
-	        "Please pay the deposit: " + dto.getPaymentUrl()
-	    );
-	}
+	
 
 	 	    
 	// get my orders (as client)
@@ -280,7 +285,7 @@ public class OrderService {
 
 	    Page<Order> page = orderRepository.findByClient(client, pageable);
 
-	    return page.map(this::mapOrderWithProfile);
+	    return page.map(this::mapWithProfile);
 	}
 	// get my orders (as artisan)
 		public Page<OrderDTO> artisanOrders(PaginationAndSortDTO dto) {
@@ -305,7 +310,7 @@ public class OrderService {
 			            pageable
 			    );
 
-			    return page.map(this::mapOrderWithProfile);
+			    return page.map(this::mapWithProfile);
 			}
 		//get order by publicID (as artisan&&as client)
 		public OrderDTO getOrderByPublicID(String orderPublicID) {
@@ -321,7 +326,7 @@ public class OrderService {
 		         !order.getService().getArtisan().equals(user.getArtisanProfile()))) {
 		        throw new InvalidOrderException("You are not allowed to view this order");
 		    }
-		    return mapOrderWithProfile(order);
+		    return mapWithProfile(order);
 		    
 		}
 	
@@ -365,14 +370,9 @@ public class OrderService {
 		    order.setFinalStatus(FinalStatus.UNPAID);
 		    order.setPaymentStatus(PaymentStatus.UNPAID);
 
+		    order.setCreatedAt(LocalDateTime.now());
 		    
-		    BigDecimal total = order.getTotalPriceSnapshot();
-
-		    BigDecimal deposit = total.multiply(BigDecimal.valueOf(0.30));
-		    BigDecimal finalAmount = total.subtract(deposit);
-
-		    order.setDepositAmount(deposit);
-		    order.setFinalAmount(finalAmount);
+		    
 
 		    
 		    
@@ -412,6 +412,17 @@ public class OrderService {
 		    order.setExtras(extrasList);
 		    order.setTotalPriceSnapshot(offer.getPrice().add(totalExtrasPrice));
 
+		    
+		    BigDecimal total = order.getTotalPriceSnapshot();
+
+		    BigDecimal  deposit = total.multiply(BigDecimal.valueOf(0.30))
+		               .setScale(2, RoundingMode.HALF_UP);
+		    BigDecimal finalAmount = total.subtract(deposit);
+
+		    order.setDepositAmount(deposit);
+		    order.setFinalAmount(finalAmount);
+		    
+		    
 		    // حفظ الطلب (Extras سيتم حفظها تلقائيًا عبر Cascade)
 		    orderRepository.save(order);
 
@@ -438,7 +449,7 @@ public class OrderService {
 		        // لا نرمي الاستثناء حتى لا يفشل حفظ الطلب
 		    }
 
-		    return mapOrderWithProfile(order);
+		    return mapWithProfile(order);
 		}
 
 
@@ -457,55 +468,35 @@ public class OrderService {
 
 	        case ACCEPTED -> {
 	        	acceptOrder(order);
-	        	//advance payment
-			    advancePayment(order);
 			    
 	        }
 
 	        case REJECTED -> rejectOrder(order);
 
-	        case COMPLETED -> completeOrder(order);
+	        case COMPLETED -> {
+	        	completeOrder(order);
+	        	paymentService.finalizeOrderPayment(order);
+	        }
 
 	        case CANCELED -> cancelOrder(order);
 
 	        default -> throw new InvalidActionException("Invalid action");
 	    }
 
-	    return mapOrderWithProfile(order);
+	    return mapWithProfile(order);
 	}
 
-	
-	
-	
-	//get order by publicID (admin)
-		public OrderDTO getByPublicID(String publicID) {
-			User user=getCurrentUser();
-			verficationAdmin(user);
-			Order order=orderRepository.findByOrderPublicID(publicID)
-					.orElseThrow(()->new OrderNotFoundException(publicID));
-			
-			return mapOrderWithProfile(order);
-		
-		}
-	
-	//get all orders (admin)
-	public Page<OrderDTO> getAllOrders(PaginationAndSortDTO dto) {
+	@Transactional
+	public void openDispute(Order order) {
 
-		User user=getCurrentUser();
-		
-		verficationAdmin(user);
-	    Pageable pageable = PageRequest.of(
-	            dto.getPage(),
-	            dto.getSize(),
-	            dto.getSort() != null
-	                    ? dto.getSort().toSpringSort()
-	                    : Sort.by("createdAt").descending()
-	    );
+	    if (order.getStatus() != OrdersStatus.IN_PROGRESS) {
+	        throw new RuntimeException("Cannot dispute this order");
+	    }
 
-	    Page<Order> page = orderRepository.findAll(pageable);
-
-	    return page.map(this::mapOrderWithProfile);
+	    order.setStatus(OrdersStatus.DISPUTED);
 	}
+	
+	
 	
 	
 }

@@ -1,25 +1,25 @@
 package com.techJob.controller.rest;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.techJob.response.ApiResponse;
 import com.techJob.response.ApiResponseFactory;
 import com.techJob.service.PaymentService;
 
-@Controller
+@RestController
 @RequestMapping("/api/v1/payment")
-public class PaymentController {
+public class PaymentRestController {
 
 	private final PaymentService paymentService ;
 	
 	
 	
 	
-	public PaymentController(PaymentService paymentService) {
+	public PaymentRestController(PaymentService paymentService) {
 		super();
 		this.paymentService = paymentService;
 	}

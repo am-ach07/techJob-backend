@@ -15,6 +15,7 @@ import com.techJob.DTOs.payments.PaymentDTO;
 import com.techJob.domain.entity.Order;
 import com.techJob.domain.entity.Payment;
 import com.techJob.domain.entity.User;
+import com.techJob.domain.entity.Wallet;
 import com.techJob.domain.enums.DepositStatus;
 import com.techJob.domain.enums.OrdersStatus;
 import com.techJob.domain.enums.PaymentStatus;
@@ -40,14 +41,20 @@ public class PaymentService {
 	
 	private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
 
+
+
 	
 	private final PaymentRepository paymentRepository;
 	private final WalletRepositrory walletRepositrory;
 	private final UserRepository userRepository; 
 	private final GeneralMapper generalMapper;
 	private final OrderRepository orderRepository;
+	private final WalletService walletService;
+	
 	@Value("${spring.payment.url}")
     private String paymentUrl;
+
+
 	
 	
 	public PaymentService(
@@ -55,13 +62,15 @@ public class PaymentService {
 			WalletRepositrory walletRepositrory,
 			UserRepository userRepository,
 			GeneralMapper generalMapper,
-			OrderRepository orderRepository) {
+			OrderRepository orderRepository,
+			WalletService walletService) {
 		super();
 		this.paymentRepository = paymentRepository;
 		this.walletRepositrory = walletRepositrory;
 		this.userRepository = userRepository;
 		this.generalMapper = generalMapper;
 		this.orderRepository = orderRepository;
+		this.walletService = walletService;
 	}
 	
 	
@@ -74,12 +83,7 @@ public class PaymentService {
 	            .findByUsernameOrEmail(email, email)
 	            .orElseThrow(() -> new UserNotFoundException(email));
 	}
-	//verify admin role
-	 private void verficationAdmin(User user) {
-			if(!user.getRole().equals(Roles.ADMIN)) {
-				throw new InvalidOrderException("You are not allowed to view this order");
-			}
-		}
+	
 	 //verify email verification
 	private void verificationEmail(User user) {
 		if(!user.getEmailVerified())
@@ -148,26 +152,106 @@ public class PaymentService {
 	    if (payment.getPaymentType() != PaymentType.DEPOSIT)
 	        throw new PaymentException("Invalid payment type");
 
+	    
+	 // 🔐 الحماية من التكرار
+	    if (Boolean.TRUE.equals(payment.getProcessed())) {
+	        throw new PaymentException("Payment already processed");
+	    }
+	    
+	    
 	    Order order = payment.getOrder();
 
+	    
+	    if (!true) { // Simulate payment gateway response
+	        payment.setPaymentStatus(PaymentStatus.FAILED);
+	        paymentRepository.save(payment);
+	        return generalMapper.toDTO(payment);
+	    } 
+	    	
 	    payment.setPaymentStatus(PaymentStatus.PAID);
 	    payment.setPaidAt(LocalDateTime.now());
-
+	    payment.setProcessed(true); // Mark as processed to prevent duplicates
+	    
 	    order.setDepositStatus(DepositStatus.PAID);
 	    order.setPaymentStatus(PaymentStatus.PARTIALLY_PAID);
 	    order.setStatus(OrdersStatus.IN_PROGRESS);
 
+	    Wallet platformWallet = walletService.getPlatformWallet();
+	    
+	 // 🔐 تنفيذ escrow
+	    walletService.freezeToEscrow(
+	            platformWallet,
+	            payment.getAmount(),
+	            payment.getOrder().getOrderPublicID()
+	    );
+	    
 	    paymentRepository.save(payment);
 	    orderRepository.save(order);
 
 	    return generalMapper.toDTO(payment);
 	}
 
+	@Transactional
+	public PaymentDTO createFinalPayment(Order order) {
 
+	    if (order.getDepositStatus() != DepositStatus.PAID) {
+	        throw new PaymentException("Deposit not paid yet");
+	    }
+	    if(paymentRepository.existsByOrderAndPaymentType(order, PaymentType.FINAL_PAYMENT)){
+	        throw new PaymentException("Final payment already created");
+	    }
+	    BigDecimal remainingAmount = order.getTotalPriceSnapshot()
+	            .subtract(order.getDepositAmount());
+
+	    Payment payment = new Payment();
+	    payment.setAmount(remainingAmount);
+	    payment.setPaymentType(PaymentType.FINAL_PAYMENT);
+	    payment.setPaymentStatus(PaymentStatus.PENDING);
+	    payment.setPaymentPublicID(UUID.randomUUID().toString());
+	    payment.setOrder(order);
+
+	    paymentRepository.save(payment);
+
+	    PaymentDTO dto = generalMapper.toDTO(payment);
+	    dto.setPaymentUrl(paymentUrl + payment.getPaymentPublicID());
+
+	    return dto;
+	}
 	
 	
-	
-	
-	
-	
+	@Transactional
+	public void finalizeOrderPayment(Order order) {
+
+	    if (order.getStatus() != OrdersStatus.IN_PROGRESS &&
+	        order.getStatus() != OrdersStatus.ACCEPTED_PENDING_PAYMENT) {
+	        throw new InvalidOrderException("Order not ready for settlement");
+	    }
+
+	    Wallet platformWallet = walletService.getPlatformWallet();
+	    Wallet artisanWallet = walletService.getWallet(
+	            order.getService().getArtisan().getUser().getPublicID()
+	    );
+
+	    BigDecimal totalAmount = order.getTotalPriceSnapshot();
+
+	    // ✅ توزيع مباشر
+	    walletService.distributeAmount(
+	            platformWallet,
+	            artisanWallet,
+	            totalAmount,
+	            order.getOrderPublicID()
+	    );
+
+	    order.setStatus(OrdersStatus.COMPLETED);
+	    order.setPaymentStatus(PaymentStatus.PAID);
+
+	    orderRepository.save(order);
+	}
 }
+	
+	
+	
+	
+	
+	
+

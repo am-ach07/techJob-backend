@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Browse Offers</title>
+    <link rel="stylesheet" th:href="@{/css/offers.css}">
+</head>
+<body>
+
+<h1>Available Services</h1>
+
+<div class="offers-container">
+    <div class="offer-card" th:each="offer : ${offersPage.content}">
+        
+        <img th:if="${offer.images.size() > 0}"
+             th:src="${offer.images[0].url}"
+             alt="Offer Image"/>
+
+        <div class="offer-content">
+            <h2 th:text="${offer.title}"></h2>
+            <p th:text="${#strings.abbreviate(offer.description, 100)}"></p>
+
+            <div class="price">
+                <span th:text="${offer.price}"></span> DA
+            </div>
+
+            <div class="artisan">
+                <span th:text="${offer.profile.user.username}"></span>
+                ⭐ <span th:text="${offer.profile.artisan.averageRating}"></span>
+            </div>
+
+            <a th:href="@{'/offers/' + ${offer.offerPublicID}}"
+               class="details-btn">
+                View Details
+            </a>
+        </div>
+
+    </div>
+</div>
+
+<!-- Pagination -->
+<div class="pagination">
+    <a th:if="${currentPage > 0}"
+       th:href="@{/offers(page=${currentPage - 1}, sort=${sort})}">
+        Previous
+    </a>
+
+    <span th:text="${currentPage + 1}"></span> /
+    <span th:text="${totalPages}"></span>
+
+    <a th:if="${currentPage + 1 < totalPages}"
+       th:href="@{/offers(page=${currentPage + 1}, sort=${sort})}">
+        Next
+    </a>
+</div>
+
+</body>
+</html>

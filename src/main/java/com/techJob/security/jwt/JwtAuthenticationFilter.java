@@ -54,7 +54,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || path.startsWith(SecurityConstants.SWAGGER_PATH)
                 || path.startsWith(SecurityConstants.API_DOCS_PATH)
                 || path.equals(SecurityConstants.LOGIN_PATH)
-                || path.equals(SecurityConstants.SIGNUP_PATH);
+                || path.equals(SecurityConstants.REGISTER_PATH);
     }
 
     @Override

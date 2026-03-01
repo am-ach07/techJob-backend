@@ -1,5 +1,5 @@
 package com.techJob.domain.enums;
 
 public enum PaymentType{
-	DEPOSIT, FINAL
+	DEPOSIT, FINAL, FINAL_PAYMENT
 }

@@ -2,9 +2,15 @@ package com.techJob.DTOs.serviceOffer;
 
 import java.math.BigDecimal;
 
+import jakarta.validation.constraints.DecimalMin;
+
 public class UpdateExtraServiceOfferDTO {
 	
+	
+	
+	
 	private String title;
+	@DecimalMin(value = "0.1", inclusive = false, message = "Price must be greater than 0")
 	private BigDecimal price;
 
 	

@@ -238,14 +238,6 @@ public class Order {
 		this.paymentStatus = paymentStatus;
 	}
 
-	public List<Payment> getPayments() {
-		return payment;
-	}
-
-	public void setPayments(List<Payment> payment) {
-		this.payment = payment;
-	}
-
 	public List<Payment> getPayment() {
 		return payment;
 	}
@@ -254,6 +246,7 @@ public class Order {
 		this.payment = payment;
 	}
 
+	
 	
 	
 		

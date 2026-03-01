@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.techJob.domain.entity.Order;
 import com.techJob.domain.entity.Payment;
 import com.techJob.domain.entity.User;
+import com.techJob.domain.enums.PaymentType;
 
 
 
@@ -16,4 +17,6 @@ public interface PaymentRepository extends JpaRepository<Payment,Long> {
 	Optional<Payment> findByPaymentPublicID(String paymentPublicID); 
 	
 	Optional<Payment> findByOrder(Order order);
+
+	boolean existsByOrderAndPaymentType(Order order, PaymentType finalPayment);
 }
