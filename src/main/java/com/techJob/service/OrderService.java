@@ -111,7 +111,7 @@ public class OrderService {
 	    
 	}
 	//calcul time 
-	private void cancelOrderAfterAccepted(Order order) {
+	private void cancelOrderAfterAccepted(Order order,OrdersStatus status) {
 		 Duration duration = Duration.between(
 				 order.getAcceptedAt(), LocalDateTime.now());
 				 
@@ -121,7 +121,7 @@ public class OrderService {
 			        throw new InvalidOrderException("Cancel time expired");
 			    }
 			    order.setCancelledAt(LocalDateTime.now());
-			    order.setStatus(OrdersStatus.CANCELED);
+			    order.setStatus(status);
 	}
 	
 	private Order validateArtisanAndGetOrder(String orderPublicId) {
@@ -219,12 +219,12 @@ public class OrderService {
     }
 	//cancel order 
 	
-	private OrderDTO cancelOrder(Order order) {
+	private OrderDTO cancelOrderByArtisan(Order order) {
         
         if(order.getStatus()!=OrdersStatus.ACCEPTED_PENDING_PAYMENT)
         	throw new InvalidActionException("Invalid Action !!!");
         
-        	cancelOrderAfterAccepted(order);
+        	cancelOrderAfterAccepted(order,OrdersStatus.CANCELED_BY_ARTISAN);
         
         notificationsServiceImp.createNotification(
                 order.getClient().getPublicID(),
@@ -478,7 +478,7 @@ public class OrderService {
 	        	paymentService.finalizeOrderPayment(order);
 	        }
 
-	        case CANCELED -> cancelOrder(order);
+	        case CANCELED -> cancelOrderByArtisan(order);
 
 	        default -> throw new InvalidActionException("Invalid action");
 	    }
@@ -495,6 +495,40 @@ public class OrderService {
 
 	    order.setStatus(OrdersStatus.DISPUTED);
 	}
+	
+	//=======================================cancel order by client===========================================
+	@Transactional
+	public OrderDTO cancelOrderByClient(String orderPublicId) {
+		
+	    User client = getCurrentUser();
+	    verificationEmail(client);
+
+	    Order order = orderRepository.findByOrderPublicID(orderPublicId)
+	            .orElseThrow(() -> new OrderNotFoundException(orderPublicId));
+
+	    if (!order.getClient().equals(client)) {
+	        throw new InvalidOrderException("You are not allowed to cancel this order");
+	    }
+
+	    if (order.getStatus() == OrdersStatus.ACCEPTED_PENDING_PAYMENT) {
+	        cancelOrderAfterAccepted(order,OrdersStatus.CANCELED_BY_CUSTOMER);
+	    } else if (order.getStatus() == OrdersStatus.PENDING_ARTISAN_ACCEPTANCE) {
+	        order.setStatus(OrdersStatus.CANCELED_BY_CUSTOMER);
+	        order.setCancelledAt(LocalDateTime.now());
+	        
+	    } else {
+	        throw new InvalidOrderException("You cannot cancel this order at this stage");
+	    }
+
+	    notificationsServiceImp.createNotification(
+	            order.getService().getArtisan().getUser().getPublicID(),
+	            "Order Update",
+	            " Order"+order.getOrderPublicID()+" has been " +OrdersStatus.CANCELED.toString().toLowerCase()
+	    );
+
+	    return mapWithProfile(order);
+	}
+	
 	
 	
 	

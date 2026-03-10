@@ -2,13 +2,12 @@ package com.techJob.domain.entity;
 
 import java.time.LocalDateTime;
 
-import com.techJob.domain.enums.Roles;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -19,7 +18,10 @@ import jakarta.persistence.UniqueConstraint;
     name = "conversation_participants",
     uniqueConstraints = {
         @UniqueConstraint(columnNames = {"conversation_id", "user_id"})
+    },
+    indexes = { @Index(name = "idx_user_conversation", columnList = "user_id")
     }
+    
 )
 public class ConversationParticipant {
 
@@ -38,6 +40,7 @@ public class ConversationParticipant {
     private LocalDateTime joinedAt = LocalDateTime.now();
 
     private LocalDateTime lastReadAt;
+    private int unreadCount;
 
 	public Long getId() {
 		return id;
@@ -69,6 +72,12 @@ public class ConversationParticipant {
 	}
 	public void setLastReadAt(LocalDateTime lastReadAt) {
 		this.lastReadAt = lastReadAt;
+	}
+	public int getUnreadCount() {
+		return unreadCount;
+	}
+	public void setUnreadCount(int unreadCount) {
+		this.unreadCount = unreadCount;
 	}
     
     

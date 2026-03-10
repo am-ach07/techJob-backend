@@ -29,15 +29,16 @@ public class Conversation {
                orphanRemoval = true)
     private List<ConversationParticipant> participants = new ArrayList<>();
 
-    @OneToMany(mappedBy = "conversation",
-               cascade = CascadeType.ALL,
-               orphanRemoval = true)
-    private List<Message> messages = new ArrayList<>();
+    
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
     private LocalDateTime updatedAt;
+    
+    private String lastMessagePreview;
+    private LocalDateTime lastMessageAt;
+    private Boolean unlocked;
 
 	public Long getId() {
 		return id;
@@ -71,12 +72,26 @@ public class Conversation {
 	public void setParticipants(List<ConversationParticipant> participants) {
 		this.participants = participants;
 	}
-	public List<Message> getMessages() {
-		return messages;
+	
+	public String getLastMessagePreview() {
+		return lastMessagePreview;
 	}
-	public void setMessages(List<Message> messages) {
-		this.messages = messages;
+	public void setLastMessagePreview(String lastMessagePreview) {
+		this.lastMessagePreview = lastMessagePreview;
 	}
+	public LocalDateTime getLastMessageAt() {
+		return lastMessageAt;
+	}
+	public void setLastMessageAt(LocalDateTime lastMessageAt) {
+		this.lastMessageAt = lastMessageAt;
+	}
+	public Boolean isUnlocked() {
+		return unlocked;
+	}
+	public void setUnlocked(Boolean unlocked) {
+		this.unlocked = unlocked;
+	}
+	
 	
 	
 	

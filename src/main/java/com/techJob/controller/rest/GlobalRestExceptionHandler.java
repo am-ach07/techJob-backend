@@ -34,7 +34,7 @@ import com.techJob.response.ApiResponse;
 import com.techJob.response.ApiResponseFactory;
 
 @RestControllerAdvice
-public class GlobalExceptionHandler {
+public class GlobalRestExceptionHandler {
 	
 	
 	

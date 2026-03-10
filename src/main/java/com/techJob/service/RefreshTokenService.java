@@ -17,25 +17,20 @@ import com.techJob.repository.RefreshTokenRepository;
 @Service
 public class RefreshTokenService {
 
-    private final RefreshTokenRepository refreshTokenRepository;
+	private static final Logger logger = LoggerFactory.getLogger(RefreshTokenService.class);
 
     @Value("${jwt.refresh.expiration}")
-    private Long refreshTokenDuration;
+    private Long refreshTokenDurationDays;
 
-    private static final Logger logger = LoggerFactory.getLogger(RefreshTokenService.class);
+    private final RefreshTokenRepository refreshTokenRepository;
 
     public RefreshTokenService(RefreshTokenRepository refreshTokenRepository) {
         this.refreshTokenRepository = refreshTokenRepository;
     }
 
-    // ============================
-    // CREATE (Login)
-    // ============================
-
-    /**
-     * Create a new refresh token for the user, deleting any previous tokens (rotation).
-     * Uses publicID for all associations.
-     */
+    
+    
+    
     @Transactional
     public RefreshToken createRefreshToken(User user) {
         // one active refresh per user (recommended)
@@ -45,19 +40,15 @@ public class RefreshTokenService {
         refreshToken.setUser(user); // user.getPublicID() is used in JWTs and can be used in DB if needed
         refreshToken.setToken(UUID.randomUUID().toString());
         refreshToken.setExpiryDate(
-                LocalDateTime.now().plusDays(refreshTokenDuration)
+                LocalDateTime.now().plusDays(refreshTokenDurationDays)
         );
         logger.info("Created new refresh token for publicID: {}", user.getPublicID());
         return refreshTokenRepository.save(refreshToken);
     }
 
-    // ============================
-    // VERIFY (Before Refresh)
-    // ============================
-
-    /**
-     * Verify refresh token validity and expiry. Delete if expired (replay protection).
-     */
+    
+    
+    
     public RefreshToken verifyRefreshToken(String token) {
         RefreshToken refreshToken =
                 refreshTokenRepository.findByToken(token)
@@ -75,13 +66,7 @@ public class RefreshTokenService {
     
     
 
-    // ============================
-    // ROTATION (Security Core)
-    // ============================
-
-    /**
-     * Rotate refresh token: delete old, issue new (prevents replay).
-     */
+   
     @Transactional
     public RefreshToken rotateRefreshToken(String oldToken) {
         RefreshToken currentToken = verifyRefreshToken(oldToken);
@@ -93,13 +78,7 @@ public class RefreshTokenService {
         return createRefreshToken(user);
     }
 
-    // ============================
-    // LOGOUT
-    // ============================
-
-    /**
-     * Delete all refresh tokens for a user (logout everywhere).
-     */
+    
     @Transactional
     public void deleteByUser(User user) {
         refreshTokenRepository.deleteByUser(user);

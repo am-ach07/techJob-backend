@@ -103,6 +103,15 @@ public class OrderRestController {
 		return ApiResponseFactory.ok(order, "Order Status are updated successfully");
 	}
     
+    //========================cancel order by client ==================================================================
+    
+    @PatchMapping("/sent/{orderId}/cancel")
+    public ResponseEntity<ApiResponse<OrderDTO>> cancelOrder(
+    					@PathVariable String orderId) {
+    	OrderDTO order=orderService.cancelOrderByClient(orderId);
+    			return ApiResponseFactory.ok(order, "Order canceled successfully");
+    }
+    
     //=====================rating completed order by client===========================================================
     
     @PutMapping("/sent/{orderId}/rating")

@@ -10,6 +10,9 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 import com.techJob.DTOs.artisan.ArtisanDTO;
 import com.techJob.DTOs.artisan.ArtisanSkillDTO;
 import com.techJob.DTOs.artisan.UpdateArtisanDTO;
+import com.techJob.DTOs.chat.ConversationDTO;
+import com.techJob.DTOs.chat.ConversationParticipantDTO;
+import com.techJob.DTOs.chat.MessageDTO;
 import com.techJob.DTOs.image.ImageDTO;
 import com.techJob.DTOs.notifications.NotificationsDTO;
 import com.techJob.DTOs.order.OrderDTO;
@@ -29,8 +32,11 @@ import com.techJob.DTOs.user.UserDTO;
 import com.techJob.domain.entity.Address;
 import com.techJob.domain.entity.ArtisanProfile;
 import com.techJob.domain.entity.ArtisanSkill;
+import com.techJob.domain.entity.Conversation;
+import com.techJob.domain.entity.ConversationParticipant;
 import com.techJob.domain.entity.ExtraServiceOffer;
 import com.techJob.domain.entity.Image;
+import com.techJob.domain.entity.Message;
 import com.techJob.domain.entity.Notifications;
 import com.techJob.domain.entity.Order;
 import com.techJob.domain.entity.Payment;
@@ -62,6 +68,12 @@ public interface GeneralMapper {
 	
 	ImageDTO toDTO(Image image);
 	
+	ConversationDTO toDTO(Conversation conversation);
+	
+	ConversationParticipantDTO toDTO(ConversationParticipant participant);
+	
+	MessageDTO toDTO(Message message);
+	
 	
 	Address toEntity(CreateAddressDTO dto);
 	
@@ -92,6 +104,9 @@ public interface GeneralMapper {
 	
 	@BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 	void updateAddressFromDTO(CreateAddressDTO dto,@MappingTarget Address address);
+
+
+
 	
 	
 	

@@ -171,4 +171,3 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }
-// Security improvement: Only the 'sub' (publicID) claim is used for authentication and validation. The 'username' claim is for display/audit only, so username changes do not invalidate JWTs.

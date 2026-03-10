@@ -9,10 +9,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.techJob.DTOs.auth.RegisterRequestDTO;
+import com.techJob.exception.auth.EmailAlreadyExistsException;
+import com.techJob.exception.auth.UsernameAlreadyExistsException;
 import com.techJob.security.jwt.CookieService;
 import com.techJob.service.AuthenticationService;
 
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 
 @Controller
 @RequestMapping("/auth")
@@ -31,7 +34,6 @@ public class AuthViewController {
     @GetMapping("/register")
     public String showRegisterPage(HttpServletResponse response, Model model) {
 
-        cookieService.generateCsrfToken(response);
 
         model.addAttribute("registerForm", new RegisterRequestDTO());
         return "auth/register";
@@ -39,25 +41,14 @@ public class AuthViewController {
 
     @PostMapping("/register")
     public String register(
-            @ModelAttribute RegisterRequestDTO dto,
-            BindingResult bindingResult,
-            Model model
+            @ModelAttribute("registerForm") @Valid RegisterRequestDTO dto,
+            BindingResult bindingResult
     ) {
-    	
-    	if (bindingResult.hasErrors()) {
-			return "auth/register";
-		}
-    	
-    	
-        try {
-            authService.register(dto); // عندك service جاهز
-
-            return "redirect:/auth/login?registered";
-
-        } catch (Exception ex) {
-
-            model.addAttribute("errorMessage", ex.getMessage());
+        if (bindingResult.hasErrors()) {
             return "auth/register";
         }
+
+        authService.register(dto);
+        return "redirect:/auth/login?registered";
     }
 }

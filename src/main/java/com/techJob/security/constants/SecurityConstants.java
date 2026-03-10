@@ -10,11 +10,9 @@ public final class SecurityConstants {
     // Cookie Names
     public static final String ACCESS_TOKEN_COOKIE = "ACCESS_TOKEN";
     public static final String REFRESH_TOKEN_COOKIE = "REFRESH_TOKEN";
-    public static final String CSRF_TOKEN_COOKIE = "XSRF-TOKEN";
 
     // Header Names
     public static final String AUTHORIZATION_HEADER = "Authorization";
-    public static final String CSRF_HEADER = "X-XSRF-TOKEN";
     public static final String TOKEN_EXPIRED_HEADER = "X-TOKEN-EXPIRED";
     //resend limit keys
     public static final String KEY_LOGIN="LOGIN_";
@@ -26,9 +24,6 @@ public final class SecurityConstants {
     public static final String REFRESH_ACTION="REFRESH";
     public static final String FAILED_ACTION="FAILED";
     public static final String SUCCESS_ACTION="SUCCESS";
-    // CSRF Parameter (for HTML forms)
-    public static final String CSRF_PARAM = "_csrf";
-
     // Auth Paths
     public static final String AUTH_LOGIN_API_PATH = "/api/v1/auth/login";
     public static final String AUTH_REGISTER_API_PATH = "/api/v1/auth/register";

@@ -1,11 +1,7 @@
 package com.techJob.domain.entity;
 
-import com.techJob.domain.enums.MessageType;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -25,10 +21,10 @@ public class Attachment {
     private Message message;
     @Column(nullable = false, unique = true, updatable = false)
     private String attachmentPublicID;
-	@Enumerated(EnumType.STRING)
-    private MessageType fileType;
+	
     private String url;
     private Long size;
+    
 	public Long getId() {
 		return id;
 	}
@@ -41,12 +37,7 @@ public class Attachment {
 	public void setMessage(Message message) {
 		this.message = message;
 	}
-	public MessageType getFileType() {
-		return fileType;
-	}
-	public void setFileType(MessageType fileType) {
-		this.fileType = fileType;
-	}
+	
 	public String getUrl() {
 		return url;
 	}
